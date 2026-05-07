@@ -3,7 +3,6 @@ package com.eventticket.service;
 import com.eventticket.entity.G8_event;
 import com.eventticket.entity.G8_venue;
 import com.eventticket.repository.EventRepository;
-import com.eventticket.repository.VenueRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,9 +15,6 @@ public class EventService {
 
     @Autowired
     private EventRepository eventRepository;
-
-    @Autowired
-    private VenueRepository venueRepository;
 
     /**
      * GUEST: Xem trang chủ (Hiển thị Banner và Slider sự kiện nổi bật)

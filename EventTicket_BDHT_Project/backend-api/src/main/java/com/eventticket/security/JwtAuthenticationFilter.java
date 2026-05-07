@@ -25,32 +25,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        try {
-            // 1. Lấy token từ Header của Request
-            String jwt = parseJwt(request);
 
-            // 2. Nếu có token và token hợp lệ
-            if (jwt != null && jwtUtil.validateJwtToken(jwt)) {
-                // Lấy email từ token
-                String email = jwtUtil.getEmailFromToken(jwt);
+        String jwt = parseJwt(request);
 
-                // Cấp quyền tạm thời là USER (Sẽ nâng cấp lấy Role từ DB sau)
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        email, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // Lưu thông tin vào Context để Controller biết ai đang đăng nhập
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+        // Fail-fast: chỉ cần token có mặt nhưng không hợp lệ => 401
+        if (jwt != null) {
+            if (!jwtUtil.validateJwtToken(jwt)) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT token");
+                return;
             }
-        } catch (Exception e) {
-            logger.error("Không thể thiết lập xác thực người dùng: {}", e);
+
+            String email = jwtUtil.getEmailFromToken(jwt);
+
+            // Role trong JWT: nếu không có API đọc role trong JwtUtil thì fallback
+            // ROLE_USER
+            String role = "ROLE_USER";
+
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    email,
+                    null,
+                    Collections.singletonList(new SimpleGrantedAuthority(role)));
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
-        // Cho phép Request đi tiếp
         filterChain.doFilter(request, response);
     }
 
-    // Hàm hỗ trợ cắt bỏ chữ "Bearer " để lấy chuỗi Token thật
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {

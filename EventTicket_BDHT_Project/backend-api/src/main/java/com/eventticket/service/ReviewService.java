@@ -3,19 +3,26 @@ package com.eventticket.service;
 import com.eventticket.entity.G8_event;
 import com.eventticket.entity.G8_review;
 import com.eventticket.entity.G8_users;
+import com.eventticket.repository.EventRepository;
 import com.eventticket.repository.ReviewRepository;
+import com.eventticket.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ReviewService {
 
     @Autowired
     private ReviewRepository reviewRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private EventRepository eventRepository;
 
     /**
      * GUEST: Xem danh sách các đánh giá, bình luận của sự kiện
@@ -26,30 +33,39 @@ public class ReviewService {
 
     /**
      * MEMBER: Viết đánh giá và chấm điểm sao
+     * Policy: Nếu user đã có review cho cùng (userId, eventId) thì cập nhật (B).
      */
     public G8_review createReview(Integer userId, Integer eventId, Integer rating, String comment) {
-        G8_users user = reviewRepository.findById(userId)
-                .map(r -> r.getUser())
+        G8_users user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
-        // Kiểm tra user chưa review sự kiện này
-        // Lưu ý: ReviewRepository.findByUserIdAndEventId() yêu cầu entity objects
-        // Tạm thời bypass check này và cho phép user viết lại review
+        G8_event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Sự kiện không tồn tại"));
 
         // Validate rating
         if (rating == null || rating < 1 || rating > 5) {
             throw new RuntimeException("Rating phải từ 1 đến 5 sao");
         }
 
-        // TODO: Lấy G8_users và G8_event từ repositories
-        // Tạm thời sử dụng direct các object được truyền vào
-
-        G8_review review = new G8_review();
-        review.setRating(rating);
-        review.setComment(comment);
-        review.setIsHidden(false);
-
-        return review;
+        // Nếu tồn tại review của user cho event này => update
+        return reviewRepository.findByUserIdAndEventId(user, event)
+                .map(existing -> {
+                    existing.setRating(rating);
+                    existing.setComment(comment);
+                    existing.setIsHidden(false);
+                    existing.setUpdatedAt(LocalDateTime.now());
+                    return reviewRepository.save(existing);
+                })
+                .orElseGet(() -> {
+                    G8_review review = new G8_review();
+                    review.setUser(user);
+                    review.setEvent(event);
+                    review.setRating(rating);
+                    review.setComment(comment);
+                    review.setIsHidden(false);
+                    review.setCreatedAt(LocalDateTime.now());
+                    return reviewRepository.save(review);
+                });
     }
 
     /**
