@@ -1,6 +1,6 @@
 package com.eventticket.service;
 
-import com.eventticket.entity.user.G8_ticketType;
+import com.eventticket.entity.G8_ticketType;
 import com.eventticket.repository.TicketTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ public class TicketTypeService {
      * GUEST: Xem danh sách các hạng vé đang mở bán của sự kiện
      */
     public List<G8_ticketType> getActiveTicketTypesByEvent(Integer eventId) {
-        return ticketTypeRepository.findActiveTicketTypesByEventId(eventId);
+        return ticketTypeRepository.findAvailableTicketsByEventId(eventId);
     }
 
     /**
@@ -38,11 +38,8 @@ public class TicketTypeService {
      * ADMIN: Thêm hạng vé mới
      */
     public G8_ticketType createTicketType(G8_ticketType ticketType) {
-        if (ticketType.getQuantitySold() == null) {
-            ticketType.setQuantitySold(0);
-        }
-        if (ticketType.getIsActive() == null) {
-            ticketType.setIsActive(true);
+        if (ticketType.getSoldQuantity() == null) {
+            ticketType.setSoldQuantity(0);
         }
 
         return ticketTypeRepository.save(ticketType);
@@ -57,8 +54,8 @@ public class TicketTypeService {
 
         if (ticketTypeDetails.getPrice() != null)
             ticketType.setPrice(ticketTypeDetails.getPrice());
-        if (ticketTypeDetails.getQuantityAvailable() != null)
-            ticketType.setQuantityAvailable(ticketTypeDetails.getQuantityAvailable());
+        if (ticketTypeDetails.getTotalQuantity() != null)
+            ticketType.setTotalQuantity(ticketTypeDetails.getTotalQuantity());
         if (ticketTypeDetails.getTypeName() != null)
             ticketType.setTypeName(ticketTypeDetails.getTypeName());
 
@@ -72,7 +69,7 @@ public class TicketTypeService {
         G8_ticketType ticketType = ticketTypeRepository.findById(ticketTypeId)
                 .orElseThrow(() -> new RuntimeException("Hạng vé không tồn tại"));
 
-        if (ticketType.getQuantitySold() > 0) {
+        if (ticketType.getSoldQuantity() > 0) {
             throw new RuntimeException("Không thể xóa hạng vé vì đã có vé được bán");
         }
 
@@ -86,7 +83,7 @@ public class TicketTypeService {
         G8_ticketType ticketType = ticketTypeRepository.findById(ticketTypeId)
                 .orElseThrow(() -> new RuntimeException("Hạng vé không tồn tại"));
 
-        ticketType.setQuantitySold(ticketType.getQuantitySold() + quantity);
+        ticketType.setSoldQuantity(ticketType.getSoldQuantity() + quantity);
         ticketTypeRepository.save(ticketType);
     }
 }

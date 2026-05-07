@@ -1,6 +1,8 @@
-package com.eventticket.entity.user;
+package com.eventticket.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,16 +27,18 @@ public class G8_review {
 
     @ManyToOne
     @JoinColumn(name = "G8_event_id", nullable = false)
-    private G8_event event; // Reference từ bảng G8_events
+    private G8_event event;
 
     @Column(name = "G8_rating", nullable = false)
-    private Integer rating; // 1-5 sao
+    @Min(1)
+    @Max(5)
+    private Integer rating; // Điểm chất lượng: 1 đến 5 sao
 
     @Column(name = "G8_comment", columnDefinition = "NVARCHAR(MAX)")
     private String comment;
 
     @Column(name = "G8_is_hidden")
-    private Boolean isHidden;
+    private Boolean isHidden; // Kiểm duyệt: 1 = Ẩn do vi phạm, 0 = Hiển thị công khai
 
     @Column(name = "G8_created_at", updatable = false)
     private LocalDateTime createdAt;

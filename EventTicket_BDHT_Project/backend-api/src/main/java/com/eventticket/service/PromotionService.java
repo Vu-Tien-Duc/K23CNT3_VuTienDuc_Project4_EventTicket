@@ -1,6 +1,6 @@
 package com.eventticket.service;
 
-import com.eventticket.entity.user.G8_promotion;
+import com.eventticket.entity.G8_promotion;
 import com.eventticket.repository.PromotionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,7 +28,7 @@ public class PromotionService {
         G8_promotion promo = promoOpt.get();
 
         // Kiểm tra mã còn hiệu lực
-        if (!promo.getIsActive() || promo.getValidUntil().isBefore(LocalDateTime.now())) {
+        if (!promo.getIsActive() || promo.getValidTo().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Mã giảm giá đã hết hiệu lực");
         }
 
@@ -84,12 +84,12 @@ public class PromotionService {
 
         if (promotionDetails.getDiscountValue() != null)
             promo.setDiscountValue(promotionDetails.getDiscountValue());
-        if (promotionDetails.getMinOrderAmount() != null)
-            promo.setMinOrderAmount(promotionDetails.getMinOrderAmount());
+        if (promotionDetails.getMinOrderValue() != null)
+            promo.setMinOrderValue(promotionDetails.getMinOrderValue());
         if (promotionDetails.getUsageLimit() != null)
             promo.setUsageLimit(promotionDetails.getUsageLimit());
-        if (promotionDetails.getValidUntil() != null)
-            promo.setValidUntil(promotionDetails.getValidUntil());
+        if (promotionDetails.getValidTo() != null)
+            promo.setValidTo(promotionDetails.getValidTo());
 
         return promotionRepository.save(promo);
     }
@@ -103,6 +103,15 @@ public class PromotionService {
 
         promo.setIsActive(isActive);
         return promotionRepository.save(promo);
+    }
+
+    /**
+     * ADMIN: Tìm kiếm/Lọc mã giảm giá (Theo loại hoặc trạng thái)
+     */
+    public List<G8_promotion> searchPromotionByType(String discountType) {
+        return promotionRepository.findAll().stream()
+                .filter(p -> p.getDiscountType().equals(discountType))
+                .toList();
     }
 
     /**

@@ -1,10 +1,11 @@
 package com.eventticket.repository;
 
-import com.eventticket.entity.user.G8_ticketType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import com.eventticket.entity.G8_ticketType;
 
 import java.util.List;
 
@@ -13,10 +14,7 @@ public interface TicketTypeRepository extends JpaRepository<G8_ticketType, Integ
     @Query("SELECT t FROM G8_ticketType t WHERE t.event.eventId = :eventId")
     List<G8_ticketType> findByEventId(@Param("eventId") Integer eventId);
 
-    @Query("SELECT t FROM G8_ticketType t WHERE t.event.eventId = :eventId AND t.isActive = true")
-    List<G8_ticketType> findActiveTicketTypesByEventId(@Param("eventId") Integer eventId);
-
-    @Query("SELECT t FROM G8_ticketType t WHERE t.event.eventId = :eventId AND t.quantityAvailable > t.quantitySold")
+    @Query("SELECT t FROM G8_ticketType t WHERE t.event.eventId = :eventId AND t.totalQuantity > t.soldQuantity")
     List<G8_ticketType> findAvailableTicketsByEventId(@Param("eventId") Integer eventId);
 
     @Query("SELECT COUNT(t) FROM G8_ticketType t WHERE t.event.eventId = :eventId")

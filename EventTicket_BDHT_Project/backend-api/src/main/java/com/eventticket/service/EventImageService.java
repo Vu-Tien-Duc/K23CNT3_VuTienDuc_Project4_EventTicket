@@ -1,6 +1,6 @@
 package com.eventticket.service;
 
-import com.eventticket.entity.user.G8_event_image;
+import com.eventticket.entity.G8_event_image;
 import com.eventticket.repository.EventImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

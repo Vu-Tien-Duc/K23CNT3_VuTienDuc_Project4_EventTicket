@@ -1,7 +1,7 @@
 package com.eventticket.service;
 
-import com.eventticket.entity.user.G8_AiChatLog;
-import com.eventticket.entity.user.G8_users;
+import com.eventticket.entity.G8_AiChatLog;
+import com.eventticket.entity.G8_users;
 import com.eventticket.repository.AiChatLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

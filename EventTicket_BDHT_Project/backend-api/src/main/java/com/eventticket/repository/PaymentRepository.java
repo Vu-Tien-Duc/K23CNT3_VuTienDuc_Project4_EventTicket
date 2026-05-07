@@ -1,10 +1,11 @@
 package com.eventticket.repository;
 
-import com.eventticket.entity.user.G8_payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import com.eventticket.entity.G8_payment;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.eventticket.service;
 
-import com.eventticket.entity.user.G8_users;
+import com.eventticket.entity.G8_users;
 import com.eventticket.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;

@@ -1,4 +1,4 @@
-package com.eventticket.entity.user;
+package com.eventticket.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -22,57 +22,34 @@ public class G8_promotion {
     @Column(name = "G8_code", nullable = false, unique = true, length = 50)
     private String code;
 
-    @Column(name = "G8_description", length = 255)
-    private String description;
-
     @Column(name = "G8_discount_type", nullable = false, length = 20)
-    private String discountType; // PERCENTAGE, FIXED_AMOUNT
+    private String discountType; // PERCENT hoặc FIXED
 
     @Column(name = "G8_discount_value", nullable = false)
     private BigDecimal discountValue;
 
-    @Column(name = "G8_max_discount", nullable = false)
-    private BigDecimal maxDiscount;
-
-    @Column(name = "G8_min_order_amount")
-    private BigDecimal minOrderAmount;
+    @Column(name = "G8_min_order_value")
+    private BigDecimal minOrderValue; // Điều kiện tổng tiền đơn hàng tối thiểu
 
     @Column(name = "G8_usage_limit")
-    private Integer usageLimit;
+    private Integer usageLimit; // Giới hạn tổng số lần sử dụng (NULL = Vô hạn)
 
     @Column(name = "G8_used_count")
-    private Integer usedCount;
+    private Integer usedCount; // Theo dõi đã được sử dụng bao nhiêu lần
 
-    @Column(name = "G8_valid_from", nullable = false)
-    private LocalDateTime validFrom;
-
-    @Column(name = "G8_valid_until", nullable = false)
-    private LocalDateTime validUntil;
+    @Column(name = "G8_valid_to", nullable = false)
+    private LocalDateTime validTo; // Hạn chót sử dụng mã
 
     @Column(name = "G8_is_active")
-    private Boolean isActive;
-
-    @Column(name = "G8_created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "G8_updated_at")
-    private LocalDateTime updatedAt;
+    private Boolean isActive; // 1 = Đang chạy, 0 = Đã tắt
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
         if (this.usedCount == null) {
             this.usedCount = 0;
         }
         if (this.isActive == null) {
             this.isActive = true;
         }
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
     }
 }

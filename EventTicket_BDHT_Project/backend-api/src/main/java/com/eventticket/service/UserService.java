@@ -1,8 +1,9 @@
 package com.eventticket.service;
 
-import com.eventticket.entity.user.G8_users;
+import com.eventticket.entity.G8_users;
 import com.eventticket.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,6 +14,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /**
      * MEMBER: Xem thông tin hồ sơ cá nhân
@@ -40,6 +44,21 @@ public class UserService {
     }
 
     /**
+     * MEMBER: Đổi mật khẩu tài khoản (Khi đang đăng nhập)
+     */
+    public void changePassword(Integer userId, String oldPassword, String newPassword) {
+        G8_users user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new RuntimeException("Mật khẩu cũ không chính xác");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    /**
      * ADMIN: Xem danh sách tài khoản người dùng hệ thống
      */
     public List<G8_users> getAllUsers() {
@@ -49,15 +68,22 @@ public class UserService {
     /**
      * ADMIN: Tìm kiếm người dùng (Theo Email, SĐT, Họ tên)
      */
-    public Optional<G8_users> searchUserByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public List<G8_users> searchUsers(String keyword) {
+        return userRepository.findAll().stream()
+                .filter(u -> u.getEmail().contains(keyword) ||
+                        u.getPhoneNumber() != null && u.getPhoneNumber().contains(keyword) ||
+                        u.getFullName().contains(keyword))
+                .toList();
     }
 
     /**
-     * ADMIN: Lọc người dùng (Theo Role)
+     * ADMIN: Lọc người dùng (Theo Role hoặc Trạng thái)
      */
-    public List<G8_users> getUsersByRole(String role) {
-        return userRepository.findByRole(role);
+    public List<G8_users> filterUsers(String role, Boolean isActive) {
+        return userRepository.findAll().stream()
+                .filter(u -> (role == null || u.getRole().equals(role)) &&
+                        (isActive == null || u.getIsActive().equals(isActive)))
+                .toList();
     }
 
     /**
@@ -87,5 +113,12 @@ public class UserService {
 
         user.setIsActive(true);
         return userRepository.save(user);
+    }
+
+    /**
+     * ADMIN: Đếm số lượng admin
+     */
+    public long countAdmins() {
+        return userRepository.countAdmins();
     }
 }

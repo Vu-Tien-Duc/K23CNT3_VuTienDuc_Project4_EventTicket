@@ -27,7 +27,7 @@ public class AdminDashboardService {
         long completedOrders = OrderRepository.countCompletedOrders();
         long totalUsers = UserRepository.count();
         long totalTickets = TicketRepository.count();
-        long usedTickets = TicketRepository.countUsedTickets();
+        long usedTickets = TicketRepository.countCheckedInTickets();
         long totalAdmins = UserRepository.countAdmins();
 
         return new DashboardStats(
@@ -64,7 +64,7 @@ public class AdminDashboardService {
      */
     public TicketSalesStats getTicketSalesStats(Integer eventId) {
         long totalTickets = TicketRepository.count(); // Cần filter by event
-        long usedTickets = TicketRepository.countUsedTickets(); // Cần filter by event
+        long usedTickets = TicketRepository.countCheckedInTickets(); // Cần filter by event
 
         double salesRate = totalTickets > 0 ? (usedTickets * 100.0) / totalTickets : 0;
 

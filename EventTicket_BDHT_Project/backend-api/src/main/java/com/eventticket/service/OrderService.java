@@ -1,6 +1,10 @@
 package com.eventticket.service;
 
-import com.eventticket.entity.user.*;
+import com.eventticket.entity.G8_order;
+import com.eventticket.entity.G8_order_item;
+import com.eventticket.entity.G8_promotion;
+import com.eventticket.entity.G8_ticketType;
+import com.eventticket.entity.G8_users;
 import com.eventticket.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +27,9 @@ public class OrderService {
     private TicketTypeRepository ticketTypeRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private PromotionService promotionService;
 
     /**
@@ -30,8 +37,11 @@ public class OrderService {
      */
     @Transactional
     public G8_order createOrder(Integer userId) {
+        G8_users user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
         G8_order order = new G8_order();
-        order.setOrderId(userId);
+        order.setUser(user);
         order.setStatus("PENDING");
         order.setTotalAmount(BigDecimal.ZERO);
         order.setFinalAmount(BigDecimal.ZERO);
@@ -51,7 +61,7 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Hạng vé không tồn tại"));
 
         // Kiểm tra số lượng còn hàng
-        int remainingTickets = ticketType.getQuantityAvailable() - ticketType.getQuantitySold();
+        int remainingTickets = ticketType.getTotalQuantity() - ticketType.getSoldQuantity();
         if (quantity > remainingTickets) {
             throw new RuntimeException("Số lượng vé không đủ. Còn lại: " + remainingTickets);
         }
@@ -104,7 +114,7 @@ public class OrderService {
         G8_promotion promo = promotionService.validateAndApplyPromotion(promotionCode);
 
         // Kiểm tra tối thiểu
-        if (promo.getMinOrderAmount() != null && order.getTotalAmount().compareTo(promo.getMinOrderAmount()) < 0) {
+        if (promo.getMinOrderValue() != null && order.getTotalAmount().compareTo(promo.getMinOrderValue()) < 0) {
             throw new RuntimeException("Tổng tiền chưa đủ để sử dụng mã này");
         }
 
@@ -112,10 +122,6 @@ public class OrderService {
 
         // Tính toán tiền giảm
         BigDecimal discount = calculateDiscount(order.getTotalAmount(), promo);
-        if (promo.getMaxDiscount() != null) {
-            discount = discount.min(promo.getMaxDiscount());
-        }
-
         order.setFinalAmount(order.getTotalAmount().subtract(discount));
 
         return orderRepository.save(order);
@@ -178,6 +184,15 @@ public class OrderService {
      */
     public List<G8_order> getAllOrders() {
         return orderRepository.findAll();
+    }
+
+    /**
+     * ADMIN: Tìm kiếm đơn hàng (Theo email hoặc mã đơn)
+     */
+    public List<G8_order> searchOrdersByEmail(String email) {
+        return orderRepository.findAll().stream()
+                .filter(o -> o.getUser().getEmail().contains(email))
+                .toList();
     }
 
     /**

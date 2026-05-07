@@ -1,7 +1,7 @@
 package com.eventticket.service;
 
-import com.eventticket.entity.user.G8_order;
-import com.eventticket.entity.user.G8_payment;
+import com.eventticket.entity.G8_order;
+import com.eventticket.entity.G8_payment;
 import com.eventticket.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

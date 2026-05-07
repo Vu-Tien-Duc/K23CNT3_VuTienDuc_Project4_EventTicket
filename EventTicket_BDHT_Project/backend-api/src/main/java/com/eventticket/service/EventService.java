@@ -1,7 +1,7 @@
 package com.eventticket.service;
 
-import com.eventticket.entity.user.G8_event;
-import com.eventticket.entity.user.G8_venue;
+import com.eventticket.entity.G8_event;
+import com.eventticket.entity.G8_venue;
 import com.eventticket.repository.EventRepository;
 import com.eventticket.repository.VenueRepository;
 
@@ -16,6 +16,9 @@ public class EventService {
 
     @Autowired
     private EventRepository eventRepository;
+
+    @Autowired
+    private VenueRepository venueRepository;
 
     /**
      * GUEST: Xem trang chủ (Hiển thị Banner và Slider sự kiện nổi bật)
@@ -42,8 +45,11 @@ public class EventService {
      * GUEST: Lọc sự kiện (Theo danh mục)
      */
     public List<G8_event> filterEventsByCategory(String categoryName) {
-        // TODO: Implement category filter (có thể cần thêm field hoặc query)
-        return eventRepository.findAll();
+        // Lọc bằng cách tìm tất cả và filter by categoryName
+        List<G8_event> allEvents = eventRepository.findByStatus("PUBLISHED");
+        return allEvents.stream()
+                .filter(e -> e.getCategoryName() != null && e.getCategoryName().equals(categoryName))
+                .toList();
     }
 
     /**
@@ -59,6 +65,15 @@ public class EventService {
     public G8_event getEventDetails(Integer eventId) {
         return eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Sự kiện không tồn tại"));
+    }
+
+    /**
+     * GUEST: Xem chi tiết địa điểm tổ chức
+     */
+    public G8_venue getEventVenue(Integer eventId) {
+        G8_event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Sự kiện không tồn tại"));
+        return event.getVenue();
     }
 
     /**
@@ -99,32 +114,29 @@ public class EventService {
         G8_event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Sự kiện không tồn tại"));
 
-        if (eventDetails.getEventName() != null)
-            event.setEventName(eventDetails.getEventName());
+        if (eventDetails.getTitle() != null)
+            event.setTitle(eventDetails.getTitle());
+
+        if (eventDetails.getArtistNames() != null)
+            event.setArtistNames(eventDetails.getArtistNames());
 
         if (eventDetails.getDescription() != null)
             event.setDescription(eventDetails.getDescription());
 
-        if (eventDetails.getLocation() != null)
-            event.setLocation(eventDetails.getLocation());
+        if (eventDetails.getCategoryName() != null)
+            event.setCategoryName(eventDetails.getCategoryName());
 
-        if (eventDetails.getEventDate() != null)
-            event.setEventDate(eventDetails.getEventDate());
+        if (eventDetails.getBannerImageUrl() != null)
+            event.setBannerImageUrl(eventDetails.getBannerImageUrl());
 
-        if (eventDetails.getEventEndDate() != null)
-            event.setEventEndDate(eventDetails.getEventEndDate());
+        if (eventDetails.getStartTime() != null)
+            event.setStartTime(eventDetails.getStartTime());
 
-        if (eventDetails.getTotalCapacity() != null)
-            event.setTotalCapacity(eventDetails.getTotalCapacity());
+        if (eventDetails.getEndTime() != null)
+            event.setEndTime(eventDetails.getEndTime());
 
-        if (eventDetails.getAvailableSeats() != null)
-            event.setAvailableSeats(eventDetails.getAvailableSeats());
-
-        if (eventDetails.getStatus() != null)
-            event.setStatus(eventDetails.getStatus());
-
-        if (eventDetails.getImageUrl() != null)
-            event.setImageUrl(eventDetails.getImageUrl());
+        if (eventDetails.getVenue() != null)
+            event.setVenue(eventDetails.getVenue());
 
         return eventRepository.save(event);
     }
@@ -143,7 +155,7 @@ public class EventService {
     /**
      * ADMIN: Xóa sự kiện (Xóa mềm)
      */
-    public void softDeleteEvent(Integer eventId) {
+    public void deleteEvent(Integer eventId) {
         G8_event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Sự kiện không tồn tại"));
 

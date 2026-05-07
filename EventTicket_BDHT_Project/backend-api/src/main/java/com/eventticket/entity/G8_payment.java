@@ -1,4 +1,4 @@
-package com.eventticket.entity.user;
+package com.eventticket.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

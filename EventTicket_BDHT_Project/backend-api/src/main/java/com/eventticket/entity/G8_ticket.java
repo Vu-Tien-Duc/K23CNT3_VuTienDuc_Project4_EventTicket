@@ -1,4 +1,4 @@
-package com.eventticket.entity.user;
+package com.eventticket.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -26,17 +26,14 @@ public class G8_ticket {
     @JoinColumn(name = "G8_ticket_type_id", nullable = false)
     private G8_ticketType ticketType;
 
-    @Column(name = "G8_ticket_code", unique = true, nullable = false, length = 50)
-    private String ticketCode;
+    @Column(name = "G8_qr_code", unique = true, nullable = false, length = 255)
+    private String qrCode; // Chuỗi ngẫu nhiên bảo mật để sinh QR Code
 
-    @Column(name = "G8_qr_code", columnDefinition = "NVARCHAR(MAX)")
-    private String qrCode;
+    @Column(name = "G8_check_in_status")
+    private Boolean checkInStatus; // 0 = Chưa dùng, 1 = Đã quét mã (Không cho quét lại)
 
-    @Column(name = "G8_status", length = 20)
-    private String status; // VALID, USED, CANCELLED
-
-    @Column(name = "G8_used_at")
-    private LocalDateTime usedAt;
+    @Column(name = "G8_checked_in_at")
+    private LocalDateTime checkedInAt; // Thời điểm quét mã QR
 
     @Column(name = "G8_created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -46,8 +43,8 @@ public class G8_ticket {
         if (this.createdAt == null) {
             this.createdAt = LocalDateTime.now();
         }
-        if (this.status == null) {
-            this.status = "VALID";
+        if (this.checkInStatus == null) {
+            this.checkInStatus = false;
         }
     }
 }

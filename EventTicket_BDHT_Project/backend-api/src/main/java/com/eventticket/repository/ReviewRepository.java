@@ -1,8 +1,8 @@
 package com.eventticket.repository;
 
-import com.eventticket.entity.user.G8_event;
-import com.eventticket.entity.user.G8_review;
-import com.eventticket.entity.user.G8_users;
+import com.eventticket.entity.G8_review;
+import com.eventticket.entity.G8_users;
+import com.eventticket.entity.G8_event;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

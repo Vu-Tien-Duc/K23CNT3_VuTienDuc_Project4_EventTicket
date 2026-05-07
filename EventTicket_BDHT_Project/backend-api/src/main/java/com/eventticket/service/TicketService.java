@@ -1,6 +1,6 @@
 package com.eventticket.service;
 
-import com.eventticket.entity.user.G8_ticket;
+import com.eventticket.entity.G8_ticket;
 import com.eventticket.repository.TicketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -47,8 +47,8 @@ public class TicketService {
     /**
      * ADMIN: Lọc vé (Theo trạng thái Check-in)
      */
-    public List<G8_ticket> getTicketsByStatus(String status) {
-        return ticketRepository.findByStatus(status);
+    public List<G8_ticket> getTicketsByCheckInStatus(Boolean checkInStatus) {
+        return ticketRepository.findByCheckInStatus(checkInStatus);
     }
 
     /**
@@ -58,12 +58,29 @@ public class TicketService {
         G8_ticket ticket = ticketRepository.findByQrCode(qrCode)
                 .orElseThrow(() -> new RuntimeException("Vé không tồn tại"));
 
-        if ("USED".equals(ticket.getStatus())) {
+        if (ticket.getCheckInStatus() != null && ticket.getCheckInStatus()) {
             throw new RuntimeException("Vé này đã được sử dụng rồi");
         }
 
-        ticket.setStatus("USED");
-        ticket.setUsedAt(LocalDateTime.now());
+        ticket.setCheckInStatus(true);
+        ticket.setCheckedInAt(LocalDateTime.now());
+
+        return ticketRepository.save(ticket);
+    }
+
+    /**
+     * ADMIN: Xác nhận check-in vé (Ghi nhận thời gian khách vào cổng)
+     */
+    public G8_ticket confirmCheckIn(Integer ticketId) {
+        G8_ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Vé không tồn tại"));
+
+        if (ticket.getCheckInStatus() != null && ticket.getCheckInStatus()) {
+            throw new RuntimeException("Vé này đã được check-in rồi");
+        }
+
+        ticket.setCheckInStatus(true);
+        ticket.setCheckedInAt(LocalDateTime.now());
 
         return ticketRepository.save(ticket);
     }
@@ -72,11 +89,11 @@ public class TicketService {
      * INTERNAL: Tạo vé mới (Được gọi khi thanh toán thành công)
      */
     public G8_ticket createTicket(G8_ticket ticket) {
-        if (ticket.getStatus() == null) {
-            ticket.setStatus("VALID");
+        if (ticket.getCheckInStatus() == null) {
+            ticket.setCheckInStatus(false);
         }
 
-        // TODO: Generate QR code từ ticket code
+        // TODO: Generate QR code từ ticket id
 
         return ticketRepository.save(ticket);
     }
