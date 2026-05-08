@@ -15,12 +15,16 @@ C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backe
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\entity\G8_order.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\repository\ReviewRepository.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\service\AuthService.java
+C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\controller\user\MemberOrderController.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\entity\G8_event.java
+C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\controller\user\UserInteractionController.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\repository\PaymentRepository.java
+C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\controller\user\AuthController.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\service\UserService.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\service\AdminDashboardService.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\service\PromotionService.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\service\TicketService.java
+C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\controller\user\MemberAccountController.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\repository\OrderItemRepository.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\repository\TicketTypeRepository.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\entity\G8_event_image.java
