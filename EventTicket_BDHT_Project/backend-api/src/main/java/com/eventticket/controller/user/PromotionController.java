@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import lombok.Data;
@@ -30,8 +29,8 @@ public class PromotionController {
             PromotionResponse response = new PromotionResponse();
             response.setSuccess(true);
             response.setPromotion(promotion);
-            response.setDiscountAmount(promotion.getDiscountAmount());
-            response.setDiscountPercent(promotion.getDiscountPercent());
+            response.setDiscountType(promotion.getDiscountType());
+            response.setDiscountValue(promotion.getDiscountValue());
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             PromotionResponse response = new PromotionResponse();
@@ -62,11 +61,11 @@ public class PromotionController {
             java.math.BigDecimal discountAmount = java.math.BigDecimal.ZERO;
 
             // Tính chiết khấu theo loại
-            if (promotion.getDiscountPercent() != null) {
-                discountAmount = originalPrice.multiply(new java.math.BigDecimal(promotion.getDiscountPercent()))
+            if ("PERCENT".equalsIgnoreCase(promotion.getDiscountType())) {
+                discountAmount = originalPrice.multiply(promotion.getDiscountValue())
                         .divide(new java.math.BigDecimal(100));
-            } else if (promotion.getDiscountAmount() != null) {
-                discountAmount = promotion.getDiscountAmount();
+            } else if ("FIXED".equalsIgnoreCase(promotion.getDiscountType())) {
+                discountAmount = promotion.getDiscountValue();
             }
 
             java.math.BigDecimal finalPrice = originalPrice.subtract(discountAmount);
@@ -74,7 +73,8 @@ public class PromotionController {
             Map<String, Object> response = new HashMap<>();
             response.put("originalPrice", originalPrice);
             response.put("discountAmount", discountAmount);
-            response.put("discountPercent", promotion.getDiscountPercent());
+            response.put("discountType", promotion.getDiscountType());
+            response.put("discountValue", promotion.getDiscountValue());
             response.put("finalPrice", finalPrice);
             response.put("promotionCode", request.getPromotionCode());
 
@@ -110,8 +110,8 @@ public class PromotionController {
         private boolean success;
         private String message;
         private G8_promotion promotion;
-        private java.math.BigDecimal discountAmount;
-        private Integer discountPercent;
+        private String discountType;
+        private java.math.BigDecimal discountValue;
 
         public boolean isSuccess() {
             return success;
@@ -137,20 +137,20 @@ public class PromotionController {
             this.promotion = promotion;
         }
 
-        public java.math.BigDecimal getDiscountAmount() {
-            return discountAmount;
+        public String getDiscountType() {
+            return discountType;
         }
 
-        public void setDiscountAmount(java.math.BigDecimal discountAmount) {
-            this.discountAmount = discountAmount;
+        public void setDiscountType(String discountType) {
+            this.discountType = discountType;
         }
 
-        public Integer getDiscountPercent() {
-            return discountPercent;
+        public java.math.BigDecimal getDiscountValue() {
+            return discountValue;
         }
 
-        public void setDiscountPercent(Integer discountPercent) {
-            this.discountPercent = discountPercent;
+        public void setDiscountValue(java.math.BigDecimal discountValue) {
+            this.discountValue = discountValue;
         }
     }
 

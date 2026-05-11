@@ -92,7 +92,7 @@ public class EventController {
      */
     @GetMapping("/api/vtd/public/events/{eventId}/images")
     public ResponseEntity<List<G8_event_image>> getEventImages(@PathVariable Integer eventId) {
-        List<G8_event_image> images = eventImageService.getImagesByEvent(eventId);
+        List<G8_event_image> images = eventImageService.getEventImages(eventId);
         return ResponseEntity.ok(images);
     }
 }

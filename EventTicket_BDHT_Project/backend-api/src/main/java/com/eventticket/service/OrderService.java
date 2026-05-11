@@ -85,9 +85,17 @@ public class OrderService {
      * MEMBER: Điều chỉnh số lượng vé (Tăng/Giảm)
      */
     @Transactional
-    public G8_order_item updateOrderItemQuantity(Integer orderItemId, Integer newQuantity) {
+    public G8_order_item updateOrderItemQuantity(Integer orderId, Integer orderItemId, Integer newQuantity) {
+        G8_order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
+
         G8_order_item orderItem = orderItemRepository.findById(orderItemId)
                 .orElseThrow(() -> new RuntimeException("Chi tiết đơn hàng không tồn tại"));
+
+        // Kiểm tra orderItem thuộc về order này
+        if (!orderItem.getOrder().getOrderId().equals(orderId)) {
+            throw new RuntimeException("Chi tiết đơn hàng không thuộc đơn hàng này");
+        }
 
         Integer oldQuantity = orderItem.getQuantity();
         orderItem.setQuantity(newQuantity);
@@ -96,7 +104,6 @@ public class OrderService {
         BigDecimal priceDifference = orderItem.getPriceAtTime()
                 .multiply(new BigDecimal(newQuantity - oldQuantity));
 
-        G8_order order = orderItem.getOrder();
         order.setTotalAmount(order.getTotalAmount().add(priceDifference));
         order.setFinalAmount(order.getFinalAmount().add(priceDifference));
 
@@ -160,6 +167,62 @@ public class OrderService {
     public G8_order getOrderDetails(Integer orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
+    }
+
+    /**
+     * MEMBER: Lấy danh sách các mục trong đơn hàng
+     */
+    public List<G8_order_item> getOrderItems(Integer orderId) {
+        // Validate that order exists
+        orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
+        return orderItemRepository.findByOrderId(orderId);
+    }
+
+    /**
+     * MEMBER: Xóa một mục khỏi đơn hàng (giỏ hàng)
+     */
+    @Transactional
+    public void removeOrderItem(Integer orderId, Integer orderItemId) {
+        G8_order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
+
+        G8_order_item orderItem = orderItemRepository.findById(orderItemId)
+                .orElseThrow(() -> new RuntimeException("Chi tiết đơn hàng không tồn tại"));
+
+        // Kiểm tra orderItem thuộc về order này
+        if (!orderItem.getOrder().getOrderId().equals(orderId)) {
+            throw new RuntimeException("Chi tiết đơn hàng không thuộc đơn hàng này");
+        }
+
+        // Trừ tiền từ tổng đơn hàng
+        BigDecimal itemTotal = orderItem.getPriceAtTime().multiply(new BigDecimal(orderItem.getQuantity()));
+        order.setTotalAmount(order.getTotalAmount().subtract(itemTotal));
+        order.setFinalAmount(order.getFinalAmount().subtract(itemTotal));
+
+        orderRepository.save(order);
+        orderItemRepository.deleteById(orderItemId);
+    }
+
+    /**
+     * MEMBER: Xác nhận đơn hàng (Chuyển từ PENDING sang CONFIRMED)
+     */
+    @Transactional
+    public G8_order confirmOrder(Integer orderId) {
+        G8_order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
+
+        if (!"PENDING".equals(order.getStatus())) {
+            throw new RuntimeException("Chỉ có thể xác nhận đơn hàng ở trạng thái PENDING");
+        }
+
+        List<G8_order_item> items = orderItemRepository.findByOrderId(orderId);
+        if (items.isEmpty()) {
+            throw new RuntimeException("Đơn hàng không có mục nào");
+        }
+
+        order.setStatus("CONFIRMED");
+        return orderRepository.save(order);
     }
 
     /**

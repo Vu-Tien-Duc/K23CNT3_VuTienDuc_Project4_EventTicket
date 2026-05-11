@@ -19,6 +19,9 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EmailService emailService;
+
     /**
      * GUEST: Đăng ký tài khoản người dùng mới
      */
@@ -80,8 +83,8 @@ public class AuthService {
         user.setResetTokenExpiry(expiryTime);
         userRepository.save(user);
 
-        // TODO: Gửi email với link reset password
-        // emailService.sendPasswordResetEmail(email, resetToken);
+        // Gửi email với link reset password
+        emailService.sendPasswordResetEmail(email, resetToken);
     }
 
     /**
@@ -104,6 +107,9 @@ public class AuthService {
         user.setResetToken(null);
         user.setResetTokenExpiry(null);
         userRepository.save(user);
+
+        // Gửi email xác nhận đổi mật khẩu
+        emailService.sendPasswordChangeConfirmation(user.getEmail());
     }
 
     /**
@@ -116,6 +122,9 @@ public class AuthService {
         if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
             throw new RuntimeException("Mật khẩu cũ không chính xác");
         }
+
+        // Gửi email xác nhận đổi mật khẩu
+        emailService.sendPasswordChangeConfirmation(user.getEmail());
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);

@@ -85,4 +85,21 @@ public class PaymentService {
         return paymentRepository.findByTransactionId(transactionId)
                 .orElseThrow(() -> new RuntimeException("Giao dịch không tồn tại"));
     }
+
+    /**
+     * MEMBER: Yêu cầu hoàn tiền
+     */
+    public G8_payment requestRefund(Integer paymentId) {
+        G8_payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new RuntimeException("Giao dịch không tồn tại"));
+
+        // Chỉ có thể hoàn tiền nếu thanh toán thành công
+        if (!"SUCCESS".equals(payment.getStatus())) {
+            throw new RuntimeException("Chỉ có thể hoàn tiền cho những giao dịch thành công");
+        }
+
+        // Cập nhật trạng thái thành REFUND_REQUESTED
+        payment.setStatus("REFUND_REQUESTED");
+        return paymentRepository.save(payment);
+    }
 }
