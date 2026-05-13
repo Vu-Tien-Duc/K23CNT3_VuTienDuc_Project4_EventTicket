@@ -36,6 +36,7 @@ C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backe
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\repository\AiChatLogRepository.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\entity\G8_order.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\entity\G8_event.java
+C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\service\OtpService.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\controller\user\PromotionController.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\controller\user\AuthController.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\controller\user\OrderController.java
