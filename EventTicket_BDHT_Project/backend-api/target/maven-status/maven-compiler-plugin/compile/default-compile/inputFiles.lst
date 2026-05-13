@@ -29,6 +29,7 @@ C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backe
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\entity\G8_ticket.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\security\JwtAuthenticationFilter.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\repository\TicketRepository.java
+C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\controller\user\HomeController.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\controller\user\VenueController.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\repository\PromotionRepository.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\EventTicketApplication.java

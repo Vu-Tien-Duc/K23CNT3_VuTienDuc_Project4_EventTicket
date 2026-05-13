@@ -68,5 +68,6 @@ com\eventticket\entity\G8_users.class
 com\eventticket\entity\G8_event.class
 com\eventticket\controller\user\AiChatController.class
 com\eventticket\controller\user\OrderController.class
+com\eventticket\controller\user\HomeController.class
 com\eventticket\entity\G8_venue.class
 com\eventticket\service\EmailService.class
