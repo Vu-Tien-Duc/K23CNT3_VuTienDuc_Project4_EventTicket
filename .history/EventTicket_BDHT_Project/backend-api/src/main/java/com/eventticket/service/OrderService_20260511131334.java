@@ -151,7 +151,7 @@ public class OrderService {
      * MEMBER: Xem lịch sử đơn hàng cá nhân
      */
     public List<G8_order> getUserOrders(Integer userId) {
-        return orderRepository.findByUser_UserId(userId);
+        return orderRepository.findByUserId(userId);
     }
 
     /**
