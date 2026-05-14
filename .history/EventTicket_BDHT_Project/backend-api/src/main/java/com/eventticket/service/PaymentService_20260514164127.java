@@ -31,6 +31,7 @@ public class PaymentService {
 
         payment.setPaymentMethod(paymentMethod);
 
+        // THÊM DÒNG NÀY
         payment.setAmount(order.getFinalAmount());
 
         payment.setStatus("PENDING");

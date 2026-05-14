@@ -18,21 +18,15 @@ public class PaymentService {
     /**
      * MEMBER: Chọn phương thức thanh toán
      */
-    public G8_payment createPayment(G8_order order, String paymentMethod) {
-
+    public G8_payment createPayment(G8_order orderId, String paymentMethod) {
         // Validate phương thức thanh toán
         if (!paymentMethod.matches("MOMO|VNPAY|ZALOPAY|CASH")) {
             throw new RuntimeException("Phương thức thanh toán không hợp lệ");
         }
 
         G8_payment payment = new G8_payment();
-
-        payment.setOrder(order);
-
+        payment.setOrder(orderId);
         payment.setPaymentMethod(paymentMethod);
-
-        payment.setAmount(order.getFinalAmount());
-
         payment.setStatus("PENDING");
 
         return paymentRepository.save(payment);
