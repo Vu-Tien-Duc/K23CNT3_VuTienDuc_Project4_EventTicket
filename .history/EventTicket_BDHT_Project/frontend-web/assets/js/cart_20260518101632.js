@@ -1,0 +1,157 @@
+document.addEventListener('DOMContentLoaded', () => {
+    window.pageUtils.loadHeader();
+    bindCartActions();
+    loadCart();
+});
+
+function bindCartActions() {
+    const refreshBtn = document.getElementById('btn-refresh');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            loadCart();
+        });
+    }
+
+    const confirmBtn = document.getElementById('btn-confirm-order');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', async () => {
+            await confirmCurrentOrder();
+        });
+    }
+
+    const paymentBtn = document.getElementById('btn-go-payment');
+    if (paymentBtn) {
+        paymentBtn.addEventListener('click', () => {
+            window.location.href = window.pageUtils.resolveUrl('/pages/user/payment.html');
+        });
+    }
+}
+
+function getCurrentOrderId() {
+    return localStorage.getItem('currentOrderId');
+}
+
+async function loadCart() {
+    const orderId = getCurrentOrderId();
+    const cartMessage = document.getElementById('cart-message');
+    const cartDetails = document.getElementById('cart-details');
+    const cartSummary = document.getElementById('cart-summary');
+    const cartItems = document.getElementById('cart-items');
+    const cartTotal = document.getElementById('cart-total');
+
+    if (!cartMessage || !cartDetails || !cartItems || !cartSummary || !cartTotal) return;
+
+    if (!orderId) {
+        cartDetails.style.display = 'none';
+        cartMessage.innerHTML = `Bạn chưa có giỏ hàng đang xử lý. <a href="${window.pageUtils.resolveUrl('pages/index.html')}" style="color:#007bff;">Quay lại trang chủ</a> để chọn vé.`;
+        return;
+    }
+
+    cartMessage.innerHTML = 'Đang tải đơn hàng...';
+    cartDetails.style.display = 'none';
+
+    try {
+        const order = await window.apiClient.get(`/api/vtd/member/orders/${orderId}`);
+        const items = await window.apiClient.get(`/api/vtd/member/orders/${orderId}/items`);
+
+        if (!order || !items) {
+            throw new Error('Không thể tải dữ liệu đơn hàng.');
+        }
+
+        if (!items.length) {
+            cartDetails.style.display = 'none';
+            cartMessage.innerHTML = `Giỏ hàng của bạn hiện trống. <a href="${window.pageUtils.resolveUrl('pages/index.html')}" style="color:#007bff;">Tiếp tục mua sắm</a>.`;
+            return;
+        }
+
+        cartMessage.innerHTML = '';
+        cartDetails.style.display = 'block';
+
+        const totalAmount = order.totalAmount || items.reduce((sum, item) => {
+            const price = item.priceAtTime || item.price || item.unitPrice || 0;
+            return sum + Number(price) * Number(item.quantity || 0);
+        }, 0);
+
+        cartSummary.innerHTML = `
+            <div><strong>Đơn hàng #${order.orderId || order.id || orderId}</strong></div>
+            <div>Trạng thái: ${order.status || order.orderStatus || 'PENDING'}</div>
+            <div>Ngày tạo: ${order.createdAt ? new Date(order.createdAt).toLocaleString('vi-VN') : 'Không rõ'}</div>
+        `;
+        cartTotal.innerText = `Tổng giá: ${Number(totalAmount).toLocaleString('vi-VN')} VNĐ`;
+
+        cartItems.innerHTML = items.map(item => {
+            const label = (item.ticketType && item.ticketType.typeName) || item.ticketTypeName || item.typeName || item.name || 'Vé sự kiện';
+            const unitPrice = item.priceAtTime || item.price || item.unitPrice || 0;
+            const quantity = item.quantity || 1;
+            const amount = Number(unitPrice) * Number(quantity);
+            return `
+                <tr>
+                    <td>${item.orderItemId || item.ticketId || item.id || '---'}</td>
+                    <td>${label}</td>
+                    <td><input type="number" min="1" value="${quantity}" data-item-id="${item.orderItemId || item.id || item.orderItem?.orderItemId}" class="cart-qty" style="width:70px; padding:6px; border-radius:4px; border:1px solid #ccc;"/></td>
+                    <td>${Number(unitPrice).toLocaleString('vi-VN')} VNĐ</td>
+                    <td>${amount.toLocaleString('vi-VN')} VNĐ</td>
+                    <td><button data-item-id="${item.orderItemId || item.id || item.orderItem?.orderItemId}" class="btn-secondary btn-remove-item">Xóa</button></td>
+                </tr>
+            `;
+        }).join('');
+
+        document.querySelectorAll('.cart-qty').forEach(input => {
+            input.addEventListener('change', async (event) => {
+                const newQty = Number(event.target.value);
+                const itemId = event.target.dataset.itemId;
+                if (newQty < 1) {
+                    event.target.value = 1;
+                    return;
+                }
+                await updateCartItem(orderId, itemId, newQty);
+            });
+        });
+
+        document.querySelectorAll('.btn-remove-item').forEach(button => {
+            button.addEventListener('click', async (event) => {
+                const itemId = event.target.dataset.itemId;
+                await removeCartItem(orderId, itemId);
+            });
+        });
+    } catch (error) {
+        console.error('Lỗi tải giỏ hàng:', error);
+        cartDetails.style.display = 'none';
+        cartMessage.innerHTML = `Không thể tải giỏ hàng: ${error.message}`;
+    }
+}
+
+async function updateCartItem(orderId, itemId, quantity) {
+    try {
+        await window.apiClient.put(`/api/vtd/member/orders/${orderId}/items/${itemId}`, { quantity });
+        await loadCart();
+    } catch (error) {
+        alert('Không thể cập nhật số lượng: ' + error.message);
+    }
+}
+
+async function removeCartItem(orderId, itemId) {
+    try {
+        await window.apiClient.delete(`/api/vtd/member/orders/${orderId}/items/${itemId}`);
+        await loadCart();
+    } catch (error) {
+        alert('Không thể xóa mục: ' + error.message);
+    }
+}
+
+async function confirmCurrentOrder() {
+    const orderId = getCurrentOrderId();
+    if (!orderId) {
+        alert('Không tìm thấy đơn hàng hiện tại.');
+        return;
+    }
+    try {
+        const order = await window.apiClient.post(`/api/vtd/member/orders/${orderId}/confirm`, {});
+        localStorage.setItem('currentOrderId', orderId);
+        alert('Đơn hàng đã được xác nhận. Bạn có thể tiếp tục thanh toán.');
+        await loadCart();
+    } catch (error) {
+        alert('Không thể xác nhận đơn hàng: ' + error.message);
+    }
+}
