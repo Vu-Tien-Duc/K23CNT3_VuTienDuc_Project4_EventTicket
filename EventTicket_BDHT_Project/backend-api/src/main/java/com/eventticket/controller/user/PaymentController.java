@@ -5,7 +5,9 @@ import com.eventticket.entity.G8_payment;
 import com.eventticket.entity.G8_users;
 import com.eventticket.repository.OrderRepository;
 import com.eventticket.repository.UserRepository;
-import com.eventticket.service.PaymentService;
+import com.eventticket.service.user.PaymentService;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -54,6 +56,11 @@ public class PaymentController {
 
         G8_order order = orderRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
+
+        // SECURITY: Member chỉ được thanh toán đơn hàng của chính mình.
+        if (order.getUser() == null || !userId.equals(order.getUser().getUserId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
         G8_payment payment = paymentService.createPayment(order, request.getPaymentMethod());
         return ResponseEntity.ok(payment);

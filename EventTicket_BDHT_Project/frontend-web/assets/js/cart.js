@@ -5,27 +5,17 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function bindCartActions() {
-    const refreshBtn = document.getElementById('btn-refresh');
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            loadCart();
-        });
-    }
-
-    const confirmBtn = document.getElementById('btn-confirm-order');
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', async () => {
-            await confirmCurrentOrder();
-        });
-    }
-
-    const paymentBtn = document.getElementById('btn-go-payment');
-    if (paymentBtn) {
-        paymentBtn.addEventListener('click', () => {
-            window.location.href = window.pageUtils.resolveUrl('/pages/user/payment.html');
-        });
-    }
+    document.getElementById('btn-refresh')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        loadCart();
+    });
+    document.getElementById('btn-confirm-order')?.addEventListener('click', confirmCurrentOrder);
+    document.getElementById('btn-go-payment')?.addEventListener('click', () => {
+        window.location.href = window.pageUtils.resolveUrl('/pages/user/payment.html');
+    });
+    document.getElementById('btn-apply-promotion')?.addEventListener('click', applyPromotion);
+    document.getElementById('btn-remove-promotion')?.addEventListener('click', removePromotion);
+    document.getElementById('btn-cancel-order')?.addEventListener('click', cancelOrder);
 }
 
 function getCurrentOrderId() {
@@ -44,82 +34,77 @@ async function loadCart() {
 
     if (!orderId) {
         cartDetails.style.display = 'none';
-        cartMessage.innerHTML = `Bạn chưa có giỏ hàng đang xử lý. <a href="${window.pageUtils.resolveUrl('/pages/index.html')}" style="color:#007bff;">Quay lại trang chủ</a> để chọn vé.`;
+        cartMessage.innerHTML = `Ban chua co gio hang. <a href="${window.pageUtils.resolveUrl('/pages/index.html')}" style="color:#007bff;">Quay lai trang chu</a> de chon ve.`;
         return;
     }
 
-    cartMessage.innerHTML = 'Đang tải đơn hàng...';
+    cartMessage.innerHTML = 'Dang tai don hang...';
     cartDetails.style.display = 'none';
 
     try {
-        const order = await window.apiClient.get(`/api/vtd/member/orders/${orderId}`);
-        const items = await window.apiClient.get(`/api/vtd/member/orders/${orderId}/items`);
-
-        if (!order || !items) {
-            throw new Error('Không thể tải dữ liệu đơn hàng.');
-        }
+        const [order, items] = await Promise.all([
+            window.apiClient.get(`/api/vtd/member/orders/${orderId}`),
+            window.apiClient.get(`/api/vtd/member/orders/${orderId}/items`)
+        ]);
 
         if (!items.length) {
-            cartDetails.style.display = 'none';
-            cartMessage.innerHTML = `Giỏ hàng của bạn hiện trống. <a href="${window.pageUtils.resolveUrl('/pages/index.html')}" style="color:#007bff;">Tiếp tục mua sắm</a>.`;
+            cartMessage.innerHTML = `Gio hang hien trong. <a href="${window.pageUtils.resolveUrl('/pages/index.html')}" style="color:#007bff;">Tiep tuc mua ve</a>.`;
             return;
         }
 
         cartMessage.innerHTML = '';
         cartDetails.style.display = 'block';
-
-        const totalAmount = order.totalAmount || items.reduce((sum, item) => {
-            const price = item.priceAtTime || item.price || item.unitPrice || 0;
-            return sum + Number(price) * Number(item.quantity || 0);
-        }, 0);
-
-        cartSummary.innerHTML = `
-            <div><strong>Đơn hàng #${order.orderId || order.id || orderId}</strong></div>
-            <div>Trạng thái: ${order.status || order.orderStatus || 'PENDING'}</div>
-            <div>Ngày tạo: ${order.createdAt ? new Date(order.createdAt).toLocaleString('vi-VN') : 'Không rõ'}</div>
-        `;
-        cartTotal.innerText = `Tổng giá: ${Number(totalAmount).toLocaleString('vi-VN')} VNĐ`;
-
-        cartItems.innerHTML = items.map(item => {
-            const label = (item.ticketType && item.ticketType.typeName) || item.ticketTypeName || item.typeName || item.name || 'Vé sự kiện';
-            const unitPrice = item.priceAtTime || item.price || item.unitPrice || 0;
-            const quantity = item.quantity || 1;
-            const amount = Number(unitPrice) * Number(quantity);
-            return `
-                <tr>
-                    <td>${item.orderItemId || item.ticketId || item.id || '---'}</td>
-                    <td>${label}</td>
-                    <td><input type="number" min="1" value="${quantity}" data-item-id="${item.orderItemId || item.id || item.orderItem?.orderItemId}" class="cart-qty" style="width:70px; padding:6px; border-radius:4px; border:1px solid #ccc;"/></td>
-                    <td>${Number(unitPrice).toLocaleString('vi-VN')} VNĐ</td>
-                    <td>${amount.toLocaleString('vi-VN')} VNĐ</td>
-                    <td><button data-item-id="${item.orderItemId || item.id || item.orderItem?.orderItemId}" class="btn-secondary btn-remove-item">Xóa</button></td>
-                </tr>
-            `;
-        }).join('');
-
-        document.querySelectorAll('.cart-qty').forEach(input => {
-            input.addEventListener('change', async (event) => {
-                const newQty = Number(event.target.value);
-                const itemId = event.target.dataset.itemId;
-                if (newQty < 1) {
-                    event.target.value = 1;
-                    return;
-                }
-                await updateCartItem(orderId, itemId, newQty);
-            });
-        });
-
-        document.querySelectorAll('.btn-remove-item').forEach(button => {
-            button.addEventListener('click', async (event) => {
-                const itemId = event.target.dataset.itemId;
-                await removeCartItem(orderId, itemId);
-            });
-        });
+        renderOrderSummary(order, cartSummary, cartTotal);
+        renderCartItems(orderId, items, cartItems);
     } catch (error) {
-        console.error('Lỗi tải giỏ hàng:', error);
         cartDetails.style.display = 'none';
-        cartMessage.innerHTML = `Không thể tải giỏ hàng: ${error.message}`;
+        cartMessage.innerHTML = `Khong the tai gio hang: ${escapeHtml(error.message)}`;
     }
+}
+
+function renderOrderSummary(order, cartSummary, cartTotal) {
+    const total = Number(order.totalAmount || 0);
+    const finalAmount = Number(order.finalAmount ?? total);
+    const discount = Math.max(0, total - finalAmount);
+    cartSummary.innerHTML = `
+        <div><strong>Don hang #${order.orderId}</strong></div>
+        <div>Trang thai: ${escapeHtml(order.status || 'PENDING')}</div>
+        <div>Ma giam gia: ${order.promotion ? escapeHtml(order.promotion.code || order.promotion.promotionCode || 'Da ap dung') : 'Chua ap dung'}</div>
+        <div>Ngay tao: ${order.createdAt ? new Date(order.createdAt).toLocaleString('vi-VN') : 'Khong ro'}</div>
+    `;
+    cartTotal.innerHTML = `
+        Tong: ${formatCurrency(total)}
+        ${discount ? `<br><span style="color:#28a745;">Giam: ${formatCurrency(discount)}</span>` : ''}
+        <br><span style="color:#e74c3c;">Can thanh toan: ${formatCurrency(finalAmount)}</span>
+    `;
+}
+
+function renderCartItems(orderId, items, cartItems) {
+    cartItems.innerHTML = items.map(item => {
+        const label = item.ticketType?.typeName || 'Ve su kien';
+        const unitPrice = Number(item.priceAtTime || 0);
+        const quantity = Number(item.quantity || 1);
+        return `
+            <tr>
+                <td>${item.orderItemId}</td>
+                <td>${escapeHtml(label)}</td>
+                <td><input type="number" min="1" value="${quantity}" data-item-id="${item.orderItemId}" class="cart-qty" style="width:70px; padding:6px; border-radius:4px; border:1px solid #ccc;"/></td>
+                <td>${formatCurrency(unitPrice)}</td>
+                <td>${formatCurrency(unitPrice * quantity)}</td>
+                <td><button data-item-id="${item.orderItemId}" class="btn-secondary btn-remove-item">Xoa</button></td>
+            </tr>
+        `;
+    }).join('');
+
+    document.querySelectorAll('.cart-qty').forEach(input => {
+        input.addEventListener('change', async (event) => {
+            const quantity = Math.max(1, Number(event.target.value || 1));
+            await updateCartItem(orderId, event.target.dataset.itemId, quantity);
+        });
+    });
+    document.querySelectorAll('.btn-remove-item').forEach(button => {
+        button.addEventListener('click', async (event) => removeCartItem(orderId, event.target.dataset.itemId));
+    });
 }
 
 async function updateCartItem(orderId, itemId, quantity) {
@@ -127,7 +112,7 @@ async function updateCartItem(orderId, itemId, quantity) {
         await window.apiClient.put(`/api/vtd/member/orders/${orderId}/items/${itemId}`, { quantity });
         await loadCart();
     } catch (error) {
-        alert('Không thể cập nhật số lượng: ' + error.message);
+        alert('Khong the cap nhat so luong: ' + error.message);
     }
 }
 
@@ -136,22 +121,61 @@ async function removeCartItem(orderId, itemId) {
         await window.apiClient.delete(`/api/vtd/member/orders/${orderId}/items/${itemId}`);
         await loadCart();
     } catch (error) {
-        alert('Không thể xóa mục: ' + error.message);
+        alert('Khong the xoa muc: ' + error.message);
+    }
+}
+
+async function applyPromotion() {
+    const orderId = getCurrentOrderId();
+    const code = document.getElementById('cart-promotion-code')?.value.trim();
+    if (!orderId || !code) return alert('Vui long nhap ma giam gia.');
+    try {
+        await window.apiClient.post(`/api/vtd/member/orders/${orderId}/promotion`, { promotionCode: code });
+        await loadCart();
+    } catch (error) {
+        alert('Khong the ap dung ma: ' + error.message);
+    }
+}
+
+async function removePromotion() {
+    const orderId = getCurrentOrderId();
+    if (!orderId) return;
+    try {
+        await window.apiClient.delete(`/api/vtd/member/orders/${orderId}/promotion`);
+        await loadCart();
+    } catch (error) {
+        alert('Khong the go ma: ' + error.message);
     }
 }
 
 async function confirmCurrentOrder() {
     const orderId = getCurrentOrderId();
-    if (!orderId) {
-        alert('Không tìm thấy đơn hàng hiện tại.');
-        return;
-    }
+    if (!orderId) return alert('Khong tim thay don hang hien tai.');
     try {
-        const order = await window.apiClient.post(`/api/vtd/member/orders/${orderId}/confirm`, {});
-        localStorage.setItem('currentOrderId', orderId);
-        alert('Đơn hàng đã được xác nhận. Bạn có thể tiếp tục thanh toán.');
+        await window.apiClient.post(`/api/vtd/member/orders/${orderId}/confirm`, {});
+        alert('Don hang da duoc xac nhan. Ban co the thanh toan.');
         await loadCart();
     } catch (error) {
-        alert('Không thể xác nhận đơn hàng: ' + error.message);
+        alert('Khong the xac nhan don hang: ' + error.message);
     }
+}
+
+async function cancelOrder() {
+    const orderId = getCurrentOrderId();
+    if (!orderId || !confirm('Huy don hang PENDING nay?')) return;
+    try {
+        await window.apiClient.delete(`/api/vtd/member/orders/${orderId}/cancel`);
+        localStorage.removeItem('currentOrderId');
+        await loadCart();
+    } catch (error) {
+        alert('Khong the huy don: ' + error.message);
+    }
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount || 0));
+}
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 }

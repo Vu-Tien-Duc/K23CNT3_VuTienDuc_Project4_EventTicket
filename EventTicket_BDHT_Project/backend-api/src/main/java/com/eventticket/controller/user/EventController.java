@@ -3,8 +3,12 @@ package com.eventticket.controller.user;
 import com.eventticket.entity.G8_event;
 import com.eventticket.entity.G8_event_image;
 import com.eventticket.entity.G8_venue;
-import com.eventticket.service.EventImageService;
-import com.eventticket.service.EventService;
+import com.eventticket.service.user.EventImageService;
+import com.eventticket.service.user.EventService;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,8 +39,12 @@ public class EventController {
      * GUEST: Lấy danh sách toàn bộ sự kiện đã công bố
      */
     @GetMapping("/api/vtd/public/events")
-    public ResponseEntity<List<G8_event>> getAllPublishedEvents() {
-        List<G8_event> events = eventService.getAllPublishedEvents();
+    public ResponseEntity<Page<G8_event>> getAllPublishedEvents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+        // GUEST: Phân trang danh sách sự kiện. page bắt đầu từ 0.
+        Pageable pageable = PageRequest.of(page, size);
+        Page<G8_event> events = eventService.getAllPublishedEvents(pageable);
         return ResponseEntity.ok(events);
     }
 
@@ -66,6 +74,16 @@ public class EventController {
             @RequestParam LocalDateTime startDate,
             @RequestParam LocalDateTime endDate) {
         List<G8_event> events = eventService.getEventsInTimeRange(startDate, endDate);
+        return ResponseEntity.ok(events);
+    }
+
+    /**
+     * GUEST: Lọc nhanh theo thời gian.
+     * filter = upcoming | this-week | this-month
+     */
+    @GetMapping("/api/vtd/public/events/time-filter")
+    public ResponseEntity<List<G8_event>> getEventsByTimeFilter(@RequestParam String filter) {
+        List<G8_event> events = eventService.getEventsByTimeFilter(filter);
         return ResponseEntity.ok(events);
     }
 

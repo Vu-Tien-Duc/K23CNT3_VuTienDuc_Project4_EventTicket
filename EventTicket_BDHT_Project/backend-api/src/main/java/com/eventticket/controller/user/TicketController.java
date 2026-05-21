@@ -2,8 +2,7 @@ package com.eventticket.controller.user;
 
 import com.eventticket.entity.G8_ticket;
 import com.eventticket.entity.G8_ticketType;
-import com.eventticket.service.TicketService;
-import com.eventticket.service.TicketTypeService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,7 +10,10 @@ import org.springframework.web.bind.annotation.*;
 
 import com.eventticket.entity.G8_users;
 import com.eventticket.repository.UserRepository;
+import com.eventticket.service.user.TicketService;
+import com.eventticket.service.user.TicketTypeService;
 
+import org.springframework.http.HttpStatus;
 import java.util.List;
 
 @RestController
@@ -78,7 +80,16 @@ public class TicketController {
      */
     @GetMapping("/api/vtd/member/tickets/{ticketId}")
     public ResponseEntity<G8_ticket> getTicketQrCode(@PathVariable Integer ticketId) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.badRequest().build();
+        }
         G8_ticket ticket = ticketService.getTicketQrCode(ticketId);
+        // SECURITY: Member chỉ được xem QR code vé của chính mình.
+        if (ticket.getOrder() == null || ticket.getOrder().getUser() == null
+                || !userId.equals(ticket.getOrder().getUser().getUserId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         return ResponseEntity.ok(ticket);
     }
 
