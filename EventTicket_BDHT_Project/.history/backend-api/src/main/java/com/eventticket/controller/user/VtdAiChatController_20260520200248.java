@@ -3,7 +3,7 @@ package com.eventticket.controller.user;
 import com.eventticket.entity.G8_AiChatLog;
 import com.eventticket.entity.G8_users;
 import com.eventticket.repository.UserRepository;
-import com.eventticket.service.user.VtdAiChatService;
+import com.eventticket.service.user.AiChatService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,10 +19,10 @@ import lombok.Data;
 @RestController
 public class AiChatController {
 
-    private final VtdAiChatService aiChatService;
+    private final AiChatService aiChatService;
     private final UserRepository userRepository;
 
-    public AiChatController(VtdAiChatService aiChatService, UserRepository userRepository) {
+    public AiChatController(AiChatService aiChatService, UserRepository userRepository) {
         this.aiChatService = aiChatService;
         this.userRepository = userRepository;
     }
