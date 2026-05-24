@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupLogin();
     setupRegister();
     setupSocialLogin();
+    setupGlobalLogout();
+    checkFacebookCallback(); // Tự động xử lý khi được Redirect từ Facebook về
 });
 
 const SOCIAL_AUTH_CONFIG = window.SOCIAL_AUTH_CONFIG || {};
@@ -21,9 +23,9 @@ function setLoginMessage(message, color = 'red') {
 function redirectAfterLogin(user) {
     const userRole = user.role || 'USER';
     if (userRole === 'ADMIN' || userRole === 'ROLE_ADMIN') {
-        window.location.href = window.pageUtils.resolveUrl('/pages/admin/lpth_dashboard.html');
+        window.location.href = window.pageUtils ? window.pageUtils.resolveUrl('pages/admin/lpth_dashboard.html') : '../admin/lpth_dashboard.html';
     } else {
-        window.location.href = window.pageUtils.resolveUrl('index.html');
+        window.location.href = window.pageUtils ? window.pageUtils.resolveUrl('pages/index.html') : '../../index.html';
     }
 }
 
@@ -122,7 +124,7 @@ function setupRegister() {
 
             msgBox.innerHTML = `<span style="color: green;">${response.message || 'Dang ky thanh cong! Dang chuyen huong...'}</span>`;
             setTimeout(() => {
-                window.location.href = window.pageUtils.resolveUrl('/pages/user/login.html');
+                window.location.href = './login.html';
             }, 1200);
         } catch (error) {
             msgBox.innerHTML = `<span style="color: red;">${error.message || 'Dang ky that bai. Vui long thu lai.'}</span>`;
@@ -142,10 +144,7 @@ function setupSocialLogin() {
     if (btnFacebook) {
         btnFacebook.addEventListener('click', (e) => {
             e.preventDefault();
-            setLoginMessage('Hệ thống đang phát triển.', 'orange');
-
-            const facebookDev = document.getElementById('facebook-dev');
-            if (facebookDev) facebookDev.style.display = 'block';
+            loginWithFacebook();
         });
     }
 
@@ -189,33 +188,38 @@ function loginWithGoogle() {
 
 function loginWithFacebook() {
     if (!isConfigured(SOCIAL_AUTH_CONFIG.facebookAppId)) {
-        setLoginMessage('Vui long cau hinh Facebook App ID trong login.html truoc khi dung dang nhap Facebook.');
+        setLoginMessage('Vui lòng cấu hình Facebook App ID trong login.html trước khi dùng đăng nhập Facebook.');
         return;
     }
     if (!window.FB) {
-        setLoginMessage('Facebook SDK chua tai xong, vui long thu lai sau vai giay.');
+        setLoginMessage('Facebook SDK chưa tải xong, vui lòng thử lại sau vài giây.');
         return;
     }
 
-    // FB.login chỉ hoạt động khi trang chạy qua HTTPS.
-    // Nếu đang chạy http, Facebook SDK sẽ chặn và có thể làm lỗi typeof asyncfunction.
-    if (window.location.protocol !== 'https:') {
-        setLoginMessage('Facebook chỉ cho phép đăng nhập khi trang chạy HTTPS. Vui lòng bật HTTPS (Live Server/Proxy) rồi thử lại.', 'orange');
+    const appId = SOCIAL_AUTH_CONFIG.facebookAppId;
+    let redirectUri = window.location.href.split('#')[0]; // URL trang hiện tại
+    if (redirectUri.includes('127.0.0.1')) {
+        redirectUri = redirectUri.replace('127.0.0.1', 'localhost');
+    }
+
+    // [GIẢI PHÁP ĐẶC BIỆT CHO LOCAL DEV] 
+    // Nếu chạy qua giao thức HTTP thường ở localhost/127.0.0.1, sử dụng phương thức Direct Redirect để không bị SDK chặn HTTPS
+    if (window.location.protocol !== 'https:' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        setLoginMessage('Đang chuyển hướng sang trang đăng nhập của Facebook...', 'blue');
+        
+        const oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=public_profile,email`;
+        
+        setTimeout(() => {
+            window.location.href = oauthUrl;
+        }, 500);
         return;
     }
 
-    FB.init({
-        appId: SOCIAL_AUTH_CONFIG.facebookAppId,
-        cookie: true,
-        xfbml: false,
-        version: 'v25.0'
-    });
-
-
-    setLoginMessage('Dang mo dang nhap Facebook...', 'blue');
+    // Nếu chạy trên HTTPS thực tế (Production), mở Popup SDK mượt mà
+    setLoginMessage('Đang mở đăng nhập Facebook...', 'blue');
     FB.login(async (fbResponse) => {
         if (!fbResponse || !fbResponse.authResponse || !fbResponse.authResponse.accessToken) {
-            setLoginMessage('Ban da huy dang nhap Facebook hoac Facebook khong tra ve token.');
+            setLoginMessage('Bạn đã hủy đăng nhập Facebook hoặc Facebook không trả về token.');
             return;
         }
 
@@ -225,12 +229,66 @@ function loginWithFacebook() {
                 provider: 'facebook',
                 accessToken
             });
-            setLoginMessage(response.message || 'Dang nhap Facebook thanh cong! Dang chuyen huong...', 'green');
+            setLoginMessage(response.message || 'Đăng nhập Facebook thành công! Đang chuyển hướng...', 'green');
             setTimeout(() => handleAuthSuccess(response), 600);
         } catch (error) {
-            // backend trả { error: '...' } hoặc status 400/500, api-client sẽ đưa message sang error.message
-            setLoginMessage(error.message || 'Dang nhap Facebook that bai.');
+            setLoginMessage(error.message || 'Đăng nhập Facebook thất bại.');
         }
     }, { scope: 'public_profile,email' });
+}
 
+/**
+ * Lắng nghe và xử lý tự động khi Facebook Redirect ngược về kèm Token (#access_token=...)
+ */
+async function checkFacebookCallback() {
+    if (window.location.hash && window.location.hash.includes('access_token=')) {
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get('access_token');
+        
+        if (accessToken) {
+            // Xóa dấu hash trên thanh URL để tăng tính thẩm mỹ
+            window.history.replaceState(null, null, window.location.pathname);
+            
+            setLoginMessage('Đang xác thực thông tin đăng nhập từ Facebook...', 'blue');
+            try {
+                const response = await window.apiClient.post('/api/vtd/public/auth/social-login', {
+                    provider: 'facebook',
+                    accessToken
+                });
+                setLoginMessage(response.message || 'Đăng nhập Facebook thành công! Đang chuyển hướng...', 'green');
+                setTimeout(() => handleAuthSuccess(response), 600);
+            } catch (error) {
+                setLoginMessage(error.message || 'Đăng nhập Facebook thất bại.');
+            }
+        }
+    }
+}
+
+// ==========================================
+// 4. LOGOUT (ĐĂNG XUẤT)
+// ==========================================
+function setupGlobalLogout() {
+    // Dùng Event Delegation để bắt sự kiện click ngay cả khi Header được load động
+    document.body.addEventListener('click', async (e) => {
+        // Tìm phần tử được click có id là 'btn-logout' hoặc class 'logout-btn'
+        const logoutBtn = e.target.closest('#btn-logout, .logout-btn');
+        
+        if (logoutBtn) {
+            e.preventDefault();
+            
+            // Tùy chọn: Gọi API backend để blacklist token nếu Backend có hỗ trợ chức năng này
+            // try { await window.apiClient.post('/api/vtd/public/auth/logout', {}); } catch(err) {}
+
+            // 1. Dọn dẹp toàn bộ dữ liệu xác thực khỏi bộ nhớ cục bộ
+            localStorage.removeItem('token');
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('currentOrderId'); // Dọn dẹp luôn giỏ hàng nếu muốn
+            
+            alert('👋 Bạn đã đăng xuất thành công!');
+            
+            // 2. Chuyển hướng người dùng về trang chủ
+            window.location.href = window.pageUtils ? window.pageUtils.resolveUrl('pages/index.html') : './pages/index.html';
+        }
+    });
 }

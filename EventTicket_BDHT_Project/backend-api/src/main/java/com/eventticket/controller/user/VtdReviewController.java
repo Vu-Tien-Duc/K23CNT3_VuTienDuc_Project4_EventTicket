@@ -60,6 +60,15 @@ public class VtdReviewController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/api/vtd/member/events/{eventId}/review-eligibility")
+    public ResponseEntity<Map<String, Object>> getReviewEligibility(@PathVariable Integer eventId) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(reviewService.getReviewEligibility(userId, eventId));
+    }
+
     /**
      * MEMBER: Viết đánh giá và chấm sao.
      * Điều kiện kiểm tra ở service: đã mua vé thành công và sự kiện đã kết thúc.

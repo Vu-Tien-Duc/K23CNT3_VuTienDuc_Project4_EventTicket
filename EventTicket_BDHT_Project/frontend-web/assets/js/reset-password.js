@@ -23,18 +23,90 @@ function attachEventListeners() {
     otpForm.addEventListener('submit', handleOtpSubmit);
     passwordForm.addEventListener('submit', handlePasswordSubmit);
 
-    // OTP input auto-focus
+    // OTP input auto-focus & advanced UX
     const otpInputs = document.querySelectorAll('.otp-input');
     otpInputs.forEach((input, index) => {
-        input.addEventListener('input', (e) => {
-            if (e.target.value && index < otpInputs.length - 1) {
+        // Auto select on focus for easy overwrite
+        input.addEventListener('focus', () => {
+            input.select();
+        });
+
+        // 1. Handle Keydown (Desktop/Physical keyboard - Intercept & instant move)
+        input.addEventListener('keydown', (e) => {
+            const key = e.key;
+
+            if (/^[0-9]$/.test(key)) {
+                e.preventDefault(); // Block default browser character insertion to avoid any duplication/leakage
+                input.value = key; // Set value directly
+                
+                // Focus next field with a tiny delay to allow browser layout to settle cleanly
+                if (index < otpInputs.length - 1) {
+                    setTimeout(() => {
+                        otpInputs[index + 1].focus();
+                    }, 5);
+                }
+            } else if (key === 'Backspace') {
+                e.preventDefault();
+                if (input.value) {
+                    input.value = '';
+                } else if (index > 0) {
+                    otpInputs[index - 1].value = '';
+                    otpInputs[index - 1].focus();
+                }
+            } else if (key === 'ArrowLeft' && index > 0) {
+                e.preventDefault();
+                otpInputs[index - 1].focus();
+            } else if (key === 'ArrowRight' && index < otpInputs.length - 1) {
+                e.preventDefault();
                 otpInputs[index + 1].focus();
             }
         });
 
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace' && !e.target.value && index > 0) {
-                otpInputs[index - 1].focus();
+        // 2. Handle Input (Mobile virtual keyboards / Fallback - safe filtering & focus)
+        input.addEventListener('input', (e) => {
+            const value = e.target.value;
+            const numValue = value.replace(/\D/g, '');
+
+            if (numValue) {
+                // Always overwrite with the very last entered digit to prevent duplicates (e.g. "22" -> "2")
+                const singleDigit = numValue.substring(numValue.length - 1);
+                e.target.value = singleDigit;
+
+                if (numValue.length > 1) {
+                    // Distribution logic for pasted text
+                    const digits = numValue.split('');
+                    let currentIdx = index;
+                    for (let i = 0; i < digits.length && currentIdx < otpInputs.length; i++) {
+                        otpInputs[currentIdx].value = digits[i];
+                        currentIdx++;
+                    }
+                    const nextFocusIdx = Math.min(currentIdx, otpInputs.length - 1);
+                    otpInputs[nextFocusIdx].focus();
+                } else {
+                    // Move focus with a tiny delay to prevent keyboard events from leaking
+                    if (index < otpInputs.length - 1) {
+                        setTimeout(() => {
+                            otpInputs[index + 1].focus();
+                        }, 5);
+                    }
+                }
+            }
+        });
+
+        // 3. Paste Event Handler (Clean & robust clipboard distribution)
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pastedData = (e.clipboardData || window.clipboardData).getData('text');
+            const numValue = pastedData.replace(/\D/g, '');
+            if (numValue) {
+                const digits = numValue.split('');
+                let currentIdx = index;
+                for (let i = 0; i < digits.length && currentIdx < otpInputs.length; i++) {
+                    otpInputs[currentIdx].value = digits[i];
+                    currentIdx++;
+                }
+                const nextFocusIdx = Math.min(currentIdx, otpInputs.length - 1);
+                otpInputs[nextFocusIdx].focus();
             }
         });
     });
@@ -66,7 +138,7 @@ async function handleEmailSubmit(e) {
 
     const button = emailForm.querySelector('.btn-submit');
     button.disabled = true;
-    button.textContent = 'Đang gửi...';
+    button.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Đang gửi mã OTP...';
 
     try {
         const response = await window.apiClient.post('/api/vtd/public/auth/forgot-password', { email });
@@ -87,7 +159,7 @@ async function handleEmailSubmit(e) {
         showError('email-error', message);
     } finally {
         button.disabled = false;
-        button.textContent = 'Gửi mã OTP';
+        button.innerHTML = 'Gửi mã OTP';
     }
 }
 
@@ -110,7 +182,7 @@ async function handleOtpSubmit(e) {
 
     const button = otpForm.querySelector('.btn-submit');
     button.disabled = true;
-    button.textContent = 'Đang xác thực...';
+    button.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Đang xác thực...';
 
     try {
         const response = await window.apiClient.post('/api/vtd/public/auth/verify-otp', {
@@ -131,7 +203,7 @@ async function handleOtpSubmit(e) {
         showError('otp-error', message);
     } finally {
         button.disabled = false;
-        button.textContent = 'Xác thực OTP';
+        button.innerHTML = 'Xác thực OTP';
     }
 }
 
@@ -155,7 +227,7 @@ async function handlePasswordSubmit(e) {
 
     const button = passwordForm.querySelector('.btn-submit');
     button.disabled = true;
-    button.textContent = 'Đang đặt lại...';
+    button.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Đang đặt lại...';
 
     try {
         const response = await window.apiClient.post('/api/vtd/public/auth/reset-password', {
@@ -185,17 +257,17 @@ async function handlePasswordSubmit(e) {
         showError('password-error', message);
     } finally {
         button.disabled = false;
-        button.textContent = 'Đặt lại mật khẩu';
+        button.innerHTML = 'Đặt lại mật khẩu';
     }
 }
 
 async function resendOtp() {
     const button = document.getElementById('resend-otp-link');
     if (!button) return;
-    
+
     button.style.pointerEvents = 'none';
     button.style.opacity = '0.5';
-    button.textContent = 'Đang gửi lại...';
+    button.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Đang gửi lại...';
 
     try {
         const response = await window.apiClient.post('/api/vtd/public/auth/forgot-password', {
@@ -221,7 +293,7 @@ async function resendOtp() {
     } finally {
         button.style.pointerEvents = 'auto';
         button.style.opacity = '1';
-        button.textContent = 'Gửi lại mã OTP';
+        button.innerHTML = 'Gửi lại mã OTP';
     }
 }
 
@@ -234,7 +306,7 @@ function startOtpTimer() {
         const minutes = Math.floor(resetState.timerSeconds / 60);
         const seconds = resetState.timerSeconds % 60;
         const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        
+
         const timerValueEl = document.getElementById('timer-value');
         if (timerValueEl) timerValueEl.textContent = display;
 

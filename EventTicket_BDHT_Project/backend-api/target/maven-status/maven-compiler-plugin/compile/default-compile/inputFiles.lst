@@ -9,10 +9,12 @@ C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backe
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\service\admin\AdminTicketTypeService.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\repository\ReviewRepository.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\controller\admin\AdminEventController.java
+C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\service\user\AiChatService.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\controller\user\VtdUserProfileController.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\controller\admin\AdminPromotionController.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\repository\PaymentRepository.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\service\user\VtdPaymentService.java
+C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\config\AiChatProperties.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\controller\admin\AdminTicketTypeController.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\controller\user\AiChatController.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\service\admin\AdminTicketService.java
@@ -58,7 +60,6 @@ C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backe
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\service\user\VtdAuthService.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\repository\UserRepository.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\service\admin\AdminDashboardService.java
-C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\service\user\VtdAiChatService.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\repository\EventImageRepository.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\repository\OrderRepository.java
 C:\IT\prj4\K23CNT3_VuTienDuc_Project4_EventTicket\EventTicket_BDHT_Project\backend-api\src\main\java\com\eventticket\service\user\VtdOrderService.java

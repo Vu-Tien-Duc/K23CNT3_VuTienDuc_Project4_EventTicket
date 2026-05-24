@@ -30,6 +30,7 @@ com\eventticket\config\CorsConfig.class
 com\eventticket\controller\user\VtdOrderController$UpdateQuantityRequest.class
 com\eventticket\controller\user\VtdAuthController$LoginRequest.class
 com\eventticket\controller\admin\AdminReviewController.class
+com\eventticket\service\user\AiChatService.class
 com\eventticket\service\user\VtdReviewService.class
 com\eventticket\security\SecurityConfig.class
 com\eventticket\controller\user\VtdTicketController.class
@@ -42,6 +43,7 @@ com\eventticket\service\user\VtdSocialAuthService.class
 com\eventticket\controller\user\VtdUserProfileController$UpdateProfileRequest.class
 com\eventticket\repository\EventRepository.class
 com\eventticket\service\user\VtdPromotionService.class
+com\eventticket\config\AiChatProperties.class
 com\eventticket\controller\user\VtdVenueController.class
 com\eventticket\controller\user\AiChatController.class
 com\eventticket\entity\G8_venue.class
@@ -76,7 +78,6 @@ com\eventticket\controller\admin\AdminTicketController.class
 com\eventticket\controller\user\VtdReviewController.class
 com\eventticket\controller\user\VtdPaymentController.class
 com\eventticket\repository\TicketTypeRepository.class
-com\eventticket\service\user\VtdAiChatService.class
 com\eventticket\service\user\VtdTicketTypeService.class
 com\eventticket\controller\user\VtdOrderController$AddTicketRequest.class
 com\eventticket\controller\user\VtdPromotionController$CalculateDiscountRequest.class

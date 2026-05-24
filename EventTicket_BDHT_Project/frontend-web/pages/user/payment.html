@@ -4,7 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thanh Toán - EventTicket</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { purple: '#5f1082', orange: '#f26f21', orangeHover: '#e05c15' }
+                    },
+                    fontFamily: { sans: ['Be Vietnam Pro', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../../assets/css/style.css">
     <style>
         :root {
@@ -526,7 +540,7 @@
                     </label>
                 </div>
 
-                <button class="btn-pay" id="btn-submit" onclick="submitPayment()">
+                <button class="btn-pay" id="btn-submit" type="button">
                     Tiến hành thanh toán
                 </button>
 
@@ -591,181 +605,6 @@
     </main>
 
     <script src="../../assets/js/core/api-client.js"></script>
-    <script>
-        let pollInterval  = null;
-        let timerInterval = null;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.pageUtils) window.pageUtils.loadHeader();
-            loadPaymentData();
-        });
-
-        async function loadPaymentData() {
-            const orderId = localStorage.getItem('currentOrderId');
-            const paymentInfo = document.getElementById('payment-info');
-
-            if (!orderId) {
-                paymentInfo.innerHTML = `
-                    <p style="color:var(--danger); font-size:14px;">
-                        ❌ Không tìm thấy đơn hàng.<br>
-                        <a href="/pages/user/cart.html" style="color:var(--accent);">Quay lại giỏ hàng</a>
-                    </p>`;
-                return;
-            }
-
-            try {
-                const order = await window.apiClient.get(`/api/vtd/member/orders/${orderId}`);
-
-                paymentInfo.innerHTML = `
-                    <div class="order-row">
-                        <span class="label">Mã đơn hàng</span>
-                        <span class="value">#${order.orderId || orderId}</span>
-                    </div>
-                    <div class="order-row">
-                        <span class="label">Trạng thái</span>
-                        <span class="value" style="color:var(--warning);">${order.status || 'PENDING'}</span>
-                    </div>
-                    <div class="order-row">
-                        <span class="label">Tổng giá trị</span>
-                        <span class="value">${formatCurrency(order.totalAmount || 0)}</span>
-                    </div>
-                    ${order.promotion ? `
-                    <div class="order-row">
-                        <span class="label">Giảm giá</span>
-                        <span class="value" style="color:var(--success);">
-                            -${formatCurrency((order.totalAmount || 0) - (order.finalAmount || 0))}
-                        </span>
-                    </div>` : ''}
-                    <div class="order-row total">
-                        <span class="label">Cần thanh toán</span>
-                        <span class="value">${formatCurrency(order.finalAmount ?? order.totalAmount ?? 0)}</span>
-                    </div>
-                `;
-
-                document.getElementById('payment-form-section').style.display = 'block';
-
-            } catch (error) {
-                paymentInfo.innerHTML = `<p style="color:var(--danger); font-size:14px;">
-                    ❌ Không thể tải đơn hàng: ${error.message}</p>`;
-            }
-        }
-
-        async function submitPayment() {
-            const orderId = localStorage.getItem('currentOrderId');
-            const method  = document.querySelector('input[name="payment-method"]:checked').value;
-            const btn     = document.getElementById('btn-submit');
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span> Đang xử lý...';
-
-            if (method === 'BANK_TRANSFER') {
-                await handleBankTransfer(orderId, btn);
-            } else {
-                await handleOtherPayment(orderId, method, btn);
-            }
-        }
-
-        // ── Chuyển khoản QR ──────────────────────────────────────────
-        async function handleBankTransfer(orderId, btn) {
-            const result = document.getElementById('payment-result');
-            try {
-                // Tạo payment
-                const payment = await window.apiClient.post('/api/vtd/member/payments', {
-                    orderId: Number(orderId),
-                    paymentMethod: 'BANK_TRANSFER'
-                });
-
-                // Lấy QR URL
-                const qrData = await window.apiClient.get(`/api/vtd/member/payments/${payment.paymentId}/qr`);
-
-                // Chuyển sang màn QR
-                document.getElementById('payment-form-section').style.display = 'none';
-                document.getElementById('qr-section').style.display = 'block';
-
-                document.getElementById('qr-image').src = qrData.qrUrl;
-                document.getElementById('qr-amount').textContent = formatCurrency(qrData.amount);
-
-                // Đặt link xem vé
-                document.getElementById('btn-view-tickets').href =
-                    (window.pageUtils ? window.pageUtils.resolveUrl('/pages/user/profile.html') : '/pages/user/profile.html');
-
-                // Đếm ngược 15 phút
-                let countdown = 900;
-                timerInterval = setInterval(() => {
-                    countdown--;
-                    const m = String(Math.floor(countdown / 60)).padStart(2, '0');
-                    const s = String(countdown % 60).padStart(2, '0');
-                    document.getElementById('qr-timer').textContent = `⏱ Hết hạn sau: ${m}:${s}`;
-
-                    if (countdown <= 0) {
-                        clearInterval(timerInterval);
-                        clearInterval(pollInterval);
-                        document.getElementById('qr-timer').textContent = '❌ QR hết hạn';
-                        document.getElementById('qr-section').style.display = 'none';
-                        document.getElementById('payment-form-section').style.display = 'block';
-                        btn.disabled = false;
-                        btn.textContent = 'Tiến hành thanh toán';
-                    }
-                }, 1000);
-
-                // Polling mỗi 5 giây
-                pollInterval = setInterval(async () => {
-                    try {
-                        const status = await window.apiClient.get(`/api/vtd/member/payments/${payment.paymentId}`);
-                        if (status.status === 'SUCCESS') {
-                            clearInterval(pollInterval);
-                            clearInterval(timerInterval);
-                            localStorage.removeItem('currentOrderId');
-                            window.location.href = window.pageUtils
-                                ? window.pageUtils.resolveUrl('/pages/user/profile.html')
-                                : '/pages/user/profile.html';
-                        }
-                    } catch (e) { console.error('Polling lỗi:', e); }
-                }, 5000);
-
-            } catch (error) {
-                result.style.color = 'var(--danger)';
-                result.textContent = '❌ Không thể tạo QR: ' + error.message;
-                btn.disabled = false;
-                btn.textContent = 'Tiến hành thanh toán';
-            }
-        }
-
-        // ── Phương thức khác (giữ nguyên flow cũ) ────────────────────
-        async function handleOtherPayment(orderId, method, btn) {
-            const result = document.getElementById('payment-result');
-            result.style.color = 'var(--text-muted)';
-            result.textContent = 'Đang xử lý...';
-
-            try {
-                const payment = await window.apiClient.post('/api/vtd/member/payments', {
-                    orderId: Number(orderId),
-                    paymentMethod: method
-                });
-
-                const completed = await window.apiClient.post(
-                    `/api/vtd/public/payments/${payment.paymentId}/webhook`,
-                    { status: 'SUCCESS', transactionId: `${method}-${Date.now()}` }
-                );
-
-                document.getElementById('payment-form-section').style.display = 'none';
-                document.getElementById('success-section').style.display = 'block';
-                document.getElementById('btn-view-tickets').href =
-                    (window.pageUtils ? window.pageUtils.resolveUrl('/pages/user/profile.html') : '/pages/user/profile.html');
-                localStorage.removeItem('currentOrderId');
-
-            } catch (error) {
-                result.style.color = 'var(--danger)';
-                result.textContent = '❌ Thanh toán thất bại: ' + error.message;
-                btn.disabled = false;
-                btn.textContent = 'Tiến hành thanh toán';
-            }
-        }
-
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
-                   .format(Number(amount || 0));
-        }
-    </script>
+    <script src="../../assets/js/payment.js"></script>
 </body>
 </html>

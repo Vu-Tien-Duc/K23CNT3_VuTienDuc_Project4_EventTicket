@@ -4,6 +4,7 @@ import com.eventticket.entity.G8_event;
 import com.eventticket.entity.G8_review;
 import com.eventticket.entity.G8_users;
 import com.eventticket.repository.EventRepository;
+import com.eventticket.repository.PaymentRepository;
 import com.eventticket.repository.ReviewRepository;
 import com.eventticket.repository.TicketRepository;
 import com.eventticket.repository.UserRepository;
@@ -11,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class VtdReviewService {
@@ -27,6 +30,9 @@ public class VtdReviewService {
 
     @Autowired
     private TicketRepository ticketRepository;
+
+    @Autowired
+    private PaymentRepository paymentRepository;
 
     /**
      * GUEST: Xem danh sách đánh giá, bình luận công khai của sự kiện.
@@ -47,8 +53,8 @@ public class VtdReviewService {
         G8_event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Sự kiện không tồn tại"));
 
-        if (!canReviewEvent(userId, event)) {
-            throw new RuntimeException("Chỉ có thể đánh giá sau khi đã mua vé và sự kiện đã kết thúc");
+        if (!canReviewEvent(userId, event.getEventId())) {
+            throw new RuntimeException("Chỉ có thể đánh giá sau khi đã mua vé và thanh toán thành công");
         }
 
         validateRating(rating);
@@ -108,6 +114,22 @@ public class VtdReviewService {
         return reviewRepository.getAverageRatingByEventId(eventId);
     }
 
+    public Map<String, Object> getReviewEligibility(Integer userId, Integer eventId) {
+        eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Su kien khong ton tai"));
+
+        boolean hasPurchased = canReviewEvent(userId, eventId);
+        boolean hasReviewed = reviewRepository.findByUserIdAndEventId(userId, eventId).isPresent();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("eventId", eventId);
+        result.put("hasPurchased", hasPurchased);
+        result.put("hasReviewed", hasReviewed);
+        result.put("eligible", hasPurchased && !hasReviewed);
+        result.put("reason", hasPurchased ? (hasReviewed ? "ALREADY_REVIEWED" : null) : "NOT_PURCHASED_OR_NOT_PAID");
+        return result;
+    }
+
     private G8_review getOwnedReview(Integer userId, Integer reviewId) {
         G8_review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("Đánh giá không tồn tại"));
@@ -125,10 +147,7 @@ public class VtdReviewService {
         }
     }
 
-    private boolean canReviewEvent(Integer userId, G8_event event) {
-        if (event.getEndTime() == null || event.getEndTime().isAfter(LocalDateTime.now())) {
-            return false;
-        }
-        return ticketRepository.countCompletedTicketsByUserAndEvent(userId, event.getEventId()) > 0;
+    private boolean canReviewEvent(Integer userId, Integer eventId) {
+        return paymentRepository.countSuccessfulPaymentsByUserAndEvent(userId, eventId) > 0;
     }
 }
