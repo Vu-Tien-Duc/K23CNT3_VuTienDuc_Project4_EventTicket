@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - BDHT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { purple: '#5f1082', orange: '#f26f21', orangeHover: '#e05c15' }
+                    },
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body class="bg-gray-50 text-slate-900">
+    <div id="header-container"></div>
+
+    <main class="max-w-6xl mx-auto px-4 py-10">
+        <div class="mb-8">
+            <p class="text-sm font-bold uppercase tracking-widest text-brand-orange">Checkout</p>
+            <h1 class="text-3xl md:text-4xl font-black mt-1">Hoan tat thong tin mua ve</h1>
+            <p class="text-slate-500 font-medium mt-2">Kiem tra san pham, ap ma giam gia va chon phuong thuc thanh toan.</p>
+        </div>
+
+        <div id="checkout-message" class="bg-white border border-gray-100 rounded-2xl p-10 text-center text-slate-500 font-bold shadow-sm">
+            <i class="fas fa-spinner fa-spin text-brand-orange text-2xl mb-3"></i>
+            <div>Dang tai thong tin checkout...</div>
+        </div>
+
+        <div id="checkout-details" style="display:none;" class="grid lg:grid-cols-[1.25fr_0.75fr] gap-6 items-start">
+            <section class="space-y-6">
+                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="p-5 border-b border-gray-100 flex items-center gap-4">
+                        <img id="checkout-event-image" src="" alt="Su kien" class="w-24 h-16 object-cover rounded-xl bg-slate-100">
+                        <div>
+                            <div class="text-xs font-bold uppercase text-slate-400">San pham</div>
+                            <h2 id="checkout-event-name" class="text-lg font-black text-slate-900"></h2>
+                        </div>
+                    </div>
+                    <div id="checkout-items" class="px-5"></div>
+                </div>
+
+                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+                    <h2 class="text-lg font-black mb-4">Thong tin nguoi mua</h2>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <label class="flex flex-col gap-1 text-sm font-bold">
+                            Ho ten *
+                            <input id="cust-name" class="border border-gray-200 rounded-xl px-4 py-3 font-medium focus:outline-none focus:border-brand-orange" type="text">
+                        </label>
+                        <label class="flex flex-col gap-1 text-sm font-bold">
+                            So dien thoai *
+                            <input id="cust-phone" class="border border-gray-200 rounded-xl px-4 py-3 font-medium focus:outline-none focus:border-brand-orange" type="tel">
+                        </label>
+                        <label class="flex flex-col gap-1 text-sm font-bold">
+                            Email *
+                            <input id="cust-email" class="border border-gray-200 rounded-xl px-4 py-3 font-medium focus:outline-none focus:border-brand-orange" type="email">
+                        </label>
+                        <label class="flex flex-col gap-1 text-sm font-bold">
+                            CCCD/CMND
+                            <input id="cust-idcard" class="border border-gray-200 rounded-xl px-4 py-3 font-medium focus:outline-none focus:border-brand-orange" type="text">
+                        </label>
+                        <label class="md:col-span-2 flex flex-col gap-1 text-sm font-bold">
+                            Dia chi *
+                            <input id="cust-address" class="border border-gray-200 rounded-xl px-4 py-3 font-medium focus:outline-none focus:border-brand-orange" type="text">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+                    <h2 class="text-lg font-black mb-4">Phuong thuc thanh toan</h2>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <label class="border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer hover:border-brand-orange">
+                            <input type="radio" name="payment-method" value="BANK_TRANSFER" class="accent-brand-orange" checked>
+                            <i class="fas fa-qrcode text-brand-orange"></i>
+                            <span class="font-bold">QR ngan hang</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer hover:border-brand-orange">
+                            <input type="radio" name="payment-method" value="MOMO" class="accent-brand-orange">
+                            <i class="fas fa-wallet text-pink-500"></i>
+                            <span class="font-bold">MoMo</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer hover:border-brand-orange">
+                            <input type="radio" name="payment-method" value="VNPAY" class="accent-brand-orange">
+                            <i class="far fa-credit-card text-blue-600"></i>
+                            <span class="font-bold">VNPay</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer hover:border-brand-orange">
+                            <input type="radio" name="payment-method" value="CASH" class="accent-brand-orange">
+                            <i class="fas fa-money-bill-wave text-emerald-600"></i>
+                            <span class="font-bold">Tien mat</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 lg:sticky lg:top-24">
+                <h2 class="text-lg font-black mb-4">Tong don hang</h2>
+
+                <div class="flex gap-2">
+                    <input id="promotion-code" class="flex-1 border border-gray-200 rounded-xl px-4 py-3 font-bold uppercase focus:outline-none focus:border-brand-orange" placeholder="Ma giam gia">
+                    <button id="btn-apply-promo" type="button" class="px-4 py-3 rounded-xl bg-slate-900 text-white font-extrabold hover:bg-brand-orange transition">
+                        Ap
+                    </button>
+                </div>
+                <button id="btn-remove-promo" type="button" class="hidden text-xs font-bold text-red-500 mt-2">Bo ma giam gia</button>
+                <div id="promotion-message" class="text-xs font-bold mt-2 text-slate-500"></div>
+
+                <div class="mt-6 space-y-3 text-sm">
+                    <div class="flex justify-between gap-4">
+                        <span class="text-slate-500 font-bold">Tam tinh</span>
+                        <span id="summary-subtotal" class="font-black"></span>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <span class="text-slate-500 font-bold">Giam gia</span>
+                        <span id="summary-discount" class="font-black text-emerald-600"></span>
+                    </div>
+                    <div class="border-t border-gray-100 pt-4 flex justify-between gap-4 items-end">
+                        <span class="text-slate-900 font-black">Can thanh toan</span>
+                        <span id="summary-final" class="text-2xl font-black text-brand-orange"></span>
+                    </div>
+                </div>
+
+                <label class="mt-6 flex items-start gap-3 text-xs text-slate-600 font-bold">
+                    <input id="terms-chk" type="checkbox" class="mt-0.5 accent-brand-orange">
+                    <span>Toi dong y voi dieu khoan mua ve va chinh sach thanh toan cua BDHT.</span>
+                </label>
+
+                <button id="btn-go-payment" class="mt-5 w-full bg-brand-orange hover:bg-brand-orangeHover active:scale-95 transition-all text-white font-extrabold uppercase tracking-wider py-4 px-5 rounded-xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-3">
+                    Sang trang thanh toan <i class="fas fa-arrow-right"></i>
+                </button>
+            </aside>
+        </div>
+    </main>
+
+    <script src="../../assets/js/core/nat-api-client.js"></script>
+    <script src="../../assets/js/nat-checkout.js?v=1.0"></script>
+</body>
+</html>

@@ -1,12 +1,14 @@
 package com.eventticket.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.eventticket.entity.G8_promotion;
 
+import jakarta.persistence.LockModeType;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -15,10 +17,14 @@ import java.util.Optional;
 public interface PromotionRepository extends JpaRepository<G8_promotion, Integer> {
     Optional<G8_promotion> findByCode(String code);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM G8_promotion p WHERE p.code = :code")
+    Optional<G8_promotion> findByCodeForUpdate(@Param("code") String code);
+
     @Query("SELECT p FROM G8_promotion p WHERE p.isActive = true AND p.validTo > CURRENT_TIMESTAMP")
     List<G8_promotion> findAllActivePromotions();
 
-    @Query("SELECT p FROM G8_promotion p WHERE p.isActive = true AND (p.usageLimit IS NULL OR p.usageLimit > p.usedCount)")
+    @Query("SELECT p FROM G8_promotion p WHERE p.isActive = true AND (p.usageLimit IS NULL OR p.usageLimit > 0)")
     List<G8_promotion> findAvailablePromotions();
 
     @Query("SELECT p FROM G8_promotion p WHERE p.validTo >= :date AND p.isActive = true")
