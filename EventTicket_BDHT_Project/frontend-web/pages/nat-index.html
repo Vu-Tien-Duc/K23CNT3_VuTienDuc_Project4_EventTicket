@@ -4,7 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BDHT - Kênh bán vé sự kiện hiện đại</title>
+    <title>BDHT – Kênh Bán Vé Sự Kiện Hàng Đầu Việt Nam</title>
+    <meta name="description"
+        content="Mua vé sự kiện âm nhạc, concert, lễ hội nhanh chóng, uy tín trên BDHT – Kênh bán vé sự kiện hiện đại nhất Việt Nam.">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -20,20 +23,72 @@
                         }
                     },
                     fontFamily: {
-                        sans: ['Poppins', 'sans-serif'],
+                        sans: ['Outfit', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap"
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/style.css?v=1.3">
+
     <style>
+        :root {
+            --neon-orange: #ff6b2b;
+            --neon-purple: #a855f7;
+            --deep-bg: #f8f5ff;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --card-border: rgba(124, 58, 237, 0.12);
+            --glass-bg: rgba(255, 255, 255, 0.92);
+            --glass-border: rgba(255, 255, 255, 0.7);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #F8F9FA;
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #f8f5ff 0%, #fff7f0 40%, #f0f9ff 100%);
+            color: #1e293b;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 20% 30%, rgba(124, 58, 237, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(249, 115, 22, 0.08) 0%, transparent 45%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* ─── SCROLLBAR ─────────────────────────────── */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(124, 58, 237, 0.35);
+            border-radius: 99px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(124, 58, 237, 0.6);
         }
 
         .scrollbar-hide::-webkit-scrollbar {
@@ -45,327 +100,851 @@
             scrollbar-width: none;
         }
 
+        /* ─── HEADER CONTAINER ──────────────────────── */
+        #header-container {
+            background: rgba(255, 255, 255, 0.88) !important;
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-bottom: 1px solid rgba(167, 139, 250, 0.2) !important;
+            box-shadow: 0 2px 20px rgba(124, 58, 237, 0.08) !important;
+        }
+
+        /* ─── HERO SECTION ──────────────────────────── */
+        .hero-section {
+            position: relative;
+            width: 100%;
+            height: clamp(500px, 88vh, 720px);
+            overflow: hidden;
+            background: linear-gradient(160deg, #1e0a3c 0%, #3b0764 50%, #1a1a2e 100%);
+        }
+
+        #hero-slider-track {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            transition: transform 0.9s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .hero-slide {
+            width: 100%;
+            height: 100%;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .hero-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.8;
+            transition: transform 8s ease, opacity 0.9s ease;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        .hero-slide.is-active img {
+            transform: scale(1.06);
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top,
+                    rgba(30, 10, 60, 0.97) 0%,
+                    rgba(30, 10, 60, 0.65) 38%,
+                    rgba(30, 10, 60, 0.15) 70%,
+                    transparent 100%);
+            display: flex;
+            align-items: flex-end;
+            padding: 3.5rem 2rem;
+        }
+
+        .hero-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(249, 115, 22, 0.18);
+            border: 1px solid rgba(249, 115, 22, 0.4);
+            color: #fdba74;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 0.35rem 0.85rem;
+            border-radius: 99px;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .hero-badge .dot-live {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #f97316;
+            animation: blink 1.4s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.2;
+            }
+        }
+
+        .hero-title {
+            font-size: clamp(2.2rem, 6vw, 5rem);
+            font-weight: 900;
+            line-height: 1.08;
+            color: #fff;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-title .accent {
+            background: linear-gradient(135deg, #f97316 0%, #fb923c 45%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-desc {
+            font-size: clamp(0.875rem, 1.5vw, 1rem);
+            color: rgba(253, 230, 213, 0.82);
+            max-width: 42rem;
+            margin-bottom: 1.8rem;
+            line-height: 1.7;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: linear-gradient(135deg, #f97316, #ec4899);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 0.9rem 2.2rem;
+            border-radius: 99px;
+            text-decoration: none;
+            box-shadow: 0 8px 28px rgba(249, 115, 22, 0.45);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .hero-cta:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 14px 40px rgba(249, 115, 22, 0.55), 0 0 0 4px rgba(249, 115, 22, 0.18);
+        }
+
+        /* ─── HERO SLIDER CONTROLS ──────────────────── */
+        .hero-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.25s ease;
+            z-index: 10;
+            outline: none;
+        }
+
+        .hero-arrow:hover {
+            background: rgba(249, 115, 22, 0.3);
+            border-color: rgba(249, 115, 22, 0.6);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .hero-arrow.left {
+            left: 1.5rem;
+        }
+
+        .hero-arrow.right {
+            right: 1.5rem;
+        }
+
+        #hero-dots-container {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+
+        .hero-dot {
+            height: 4px;
+            border-radius: 99px;
+            background: rgba(255, 255, 255, 0.35);
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            width: 20px;
+        }
+
+        .hero-dot.active {
+            background: #f97316;
+            width: 40px;
+            box-shadow: 0 0 12px rgba(249, 115, 22, 0.7);
+        }
+
+        /* ─── SECTION HEADERS ───────────────────────── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .section-label {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .section-eyebrow {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #f97316;
+        }
+
+        .section-eyebrow::before {
+            content: '';
+            width: 20px;
+            height: 2px;
+            background: #f97316;
+            border-radius: 99px;
+        }
+
+        .section-title-main {
+            font-size: clamp(1.4rem, 3vw, 2rem);
+            font-weight: 800;
+            color: #1e0a3c;
+            letter-spacing: -0.02em;
+        }
+
+        .section-badge-count {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #7c3aed;
+            background: rgba(124, 58, 237, 0.08);
+            border: 1px solid rgba(124, 58, 237, 0.18);
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+        }
+
+        .scroll-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .scroll-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid rgba(124, 58, 237, 0.18);
+            background: rgba(255, 255, 255, 0.7);
+            color: #7c3aed;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            outline: none;
+        }
+
+        .scroll-btn:hover {
+            background: rgba(249, 115, 22, 0.1);
+            border-color: rgba(249, 115, 22, 0.4);
+            color: #f97316;
+            transform: scale(1.1);
+        }
+
+        /* ─── MINI SLIDER CARD ──────────────────────── */
         .mini-slider-card {
             min-width: 260px;
             width: 260px;
         }
+
+        /* ─── GLASS EVENT CARD (light) ──────────────── */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 1.25rem;
+            overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.07), 0 1px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(249, 115, 22, 0.35);
+            box-shadow: 0 20px 50px rgba(124, 58, 237, 0.14), 0 0 0 1px rgba(249, 115, 22, 0.15);
+        }
+
+        .glass-card .card-thumb {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/10;
+            overflow: hidden;
+            background: #f3e8ff;
+            flex-shrink: 0;
+        }
+
+        .glass-card .card-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        .glass-card:hover .card-thumb img {
+            transform: scale(1.08);
+        }
+
+        .card-city-tag {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(124, 58, 237, 0.18);
+            backdrop-filter: blur(8px);
+            color: #3b0764;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.25rem 0.65rem;
+            border-radius: 99px;
+        }
+
+        .card-cat-tag {
+            position: absolute;
+            bottom: 0.75rem;
+            right: 0.75rem;
+            background: linear-gradient(135deg, #f97316, #ec4899);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.2rem 0.6rem;
+            border-radius: 99px;
+        }
+
+        .glass-card .card-body {
+            padding: 1.1rem 1.2rem 1.2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glass-card .card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1e0a3c;
+            margin-bottom: 0.6rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: color 0.2s;
+        }
+
+        .glass-card:hover .card-title {
+            color: #7c3aed;
+        }
+
+        .card-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            margin-bottom: 0.9rem;
+        }
+
+        .card-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .card-meta-row i {
+            font-size: 0.7rem;
+            color: #f97316;
+            width: 12px;
+            text-align: center;
+        }
+
+        .card-footer-row {
+            border-top: 1px solid rgba(124, 58, 237, 0.1);
+            padding-top: 0.8rem;
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .price-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #9ca3af;
+            margin-bottom: 0.15rem;
+        }
+
+        .price-value {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #f97316;
+        }
+
+        .card-arrow-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fff0e6, #fce7f3);
+            border: 1px solid #fed7aa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f97316;
+            font-size: 0.75rem;
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .glass-card:hover .card-arrow-btn {
+            background: linear-gradient(135deg, #f97316, #ec4899);
+            border-color: transparent;
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        /* ─── FILTER SECTION ────────────────────────── */
+        .filter-bar {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1.5px solid rgba(167, 139, 250, 0.22);
+            border-radius: 1.25rem;
+            padding: 1.25rem 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 1rem;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 8px 30px rgba(124, 58, 237, 0.08);
+        }
+
+        @media (max-width: 640px) {
+            .filter-bar {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .filter-bar select {
+            background: #fff;
+            border: 1.5px solid #e9d5ff;
+            color: #374151;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .filter-bar select option {
+            background: #fff;
+            color: #374151;
+        }
+
+        .filter-bar select:focus {
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+        }
+
+        .filter-btn {
+            background: linear-gradient(135deg, #f97316 0%, #ec4899 100%);
+            color: #fff;
+            border: none;
+            padding: 0.75rem 1.75rem;
+            border-radius: 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3);
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(249, 115, 22, 0.42);
+            background: linear-gradient(135deg, #ea6c0a 0%, #db2777 100%);
+        }
+
+        .filter-btn:active {
+            transform: translateY(0) scale(0.97);
+        }
+
+        /* ─── ALL EVENTS GRID ───────────────────────── */
+        #all-events-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 640px) {
+            #all-events-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            #all-events-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* ─── PAGINATION ────────────────────────────── */
+        #all-events-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 3rem;
+        }
+
+        /* ─── SKELETON ──────────────────────────────── */
+        @keyframes shimmer {
+            0% {
+                background-position: -400px 0;
+            }
+
+            100% {
+                background-position: 400px 0;
+            }
+        }
+
+        .skeleton-shimmer {
+            background: linear-gradient(90deg,
+                    #f3e8ff 25%,
+                    #ede9fe 50%,
+                    #f3e8ff 75%);
+            background-size: 800px 100%;
+            animation: shimmer 1.6s infinite;
+        }
+
+        /* ─── SECTION SEPARATOR ─────────────────────── */
+        .section-sep {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.25), transparent);
+            margin: 0;
+        }
+
+        /* ─── STATS RIBBON ──────────────────────────── */
+        .stats-ribbon {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%);
+            border-top: 1px solid rgba(167, 139, 250, 0.18);
+            border-bottom: 1px solid rgba(167, 139, 250, 0.18);
+        }
+
+        /* ─── FOOTER CONTAINER ──────────────────────── */
+        #footer-container {
+            background: #fff !important;
+            border-top: 1px solid rgba(167, 139, 250, 0.18) !important;
+        }
+
+        /* ─── AI STATUS PILL ────────────────────────── */
+        #hero-ai-status-container {
+            margin-top: 1.5rem;
+        }
+
+        .ai-status-shell {
+            display: inline-block;
+        }
+
+        /* ─── GLOW SEPARATOR ────────────────────────── */
+        .glow-sep {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .glow-sep-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+        }
+
+        /* ─── RESPONSIVENESS ────────────────────────── */
+        @media (max-width: 768px) {
+            .hero-arrow {
+                display: none;
+            }
+
+            #hero-dots-container {
+                bottom: 1rem;
+            }
+        }
     </style>
 </head>
 
-<body class="text-gray-600 antialiased bg-[#F8F9FA] leading-relaxed">
+<body>
 
-    <div id="header-container"
-        class="sticky top-0 z-[100] bg-white/80 backdrop-blur-lg border-b border-gray-100 shadow-sm"></div>
+    <div id="header-container" class="sticky top-0 z-[100]"></div>
 
-    <main class="pb-24">
+    <main>
 
-        <!-- ===================== HERO BANNER SLIDER ===================== -->
-        <section class="relative w-full overflow-hidden bg-slate-900" style="height: 540px;">
-            <div id="hero-slider-track" class="w-full h-full flex transition-transform duration-700 ease-in-out">
+        <!-- ═══════════════════════════════════════════
+             HERO BANNER SLIDER
+             ═══════════════════════════════════════════ -->
+        <section class="hero-section">
+            <div id="hero-slider-track"></div>
 
-                <div class="w-full h-full flex-shrink-0 relative">
-                    <img id="banner-img-0" src="" class="w-full h-full object-cover opacity-90" alt="Banner 1">
-                    <div
-                        class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/40 to-transparent flex items-end p-8 md:p-20">
-                        <div class="max-w-7xl mx-auto w-full text-white">
-                            <span
-                                class="bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-widest mb-4 inline-block shadow-lg">HOT
-                                LIVE CONCERT</span>
-                            <h2
-                                class="text-4xl md:text-6xl font-extrabold mb-4 leading-tight tracking-tight text-white drop-shadow-md">
-                                <span id="hero-slide-0-title">Liveshow HÀ NHI</span><br /><span
-                                    id="hero-slide-0-subtitle"
-                                    class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-rose-400">Người
-                                    Yêu Cũ Là Tri Kỷ</span>
-                            </h2>
-                            <p
-                                class="text-sm md:text-base font-medium opacity-90 mb-8 max-w-2xl leading-relaxed text-gray-200">
-                                Đêm nhạc live hoành tráng giữa lòng thiên nhiên xanh mát Sky Melody Ecopark, đưa bạn qua
-                                những cung bậc cảm xúc khó quên.</p>
-                            <a id="hero-slide-0-cta" href=""
-                                class="bg-gradient-to-r from-orange-500 to-rose-500 hover:scale-105 active:scale-95 text-white font-bold px-8 py-4 rounded-full transition-all duration-300 text-sm uppercase tracking-wider inline-block shadow-[0_8px_30px_rgb(242,111,33,0.3)]">Mua
-                                Vé Ngay <i class="fas fa-arrow-right ml-2"></i></a>
-                            <div id="hero-ai-status-container" class="mt-5 hidden">
-                                <div
-                                    class="ai-status-shell rounded-full bg-gradient-to-r from-amber-200 via-orange-200 to-rose-200 p-[1px] shadow-[0_0_30px_rgba(251,191,36,0.28)] transition-all duration-300">
-                                    <div id="hero-ai-status-pill"
-                                        class="inline-flex flex-wrap items-center gap-3 rounded-full border border-white/35 bg-white/12 backdrop-blur px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_40px_rgba(15,23,42,0.28)]">
-                                        <div class="flex items-center gap-2">
-                                            <span id="hero-ai-status-dot"
-                                                class="inline-block h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse"></span>
-                                            <span class="inline-flex items-center gap-1.5">
-                                                <i class="fas fa-robot text-[11px]"></i>
-                                                <span id="hero-ai-status-text">Đang kiểm tra trợ lý AI...</span>
-                                            </span>
-                                        </div>
-                                        <button id="hero-ai-cta" type="button"
-                                            class="hidden items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold text-slate-900 shadow-[0_8px_20px_rgba(255,255,255,0.18)] transition-all duration-300 hover:scale-105 hover:-translate-y-0.5">
-                                            <span
-                                                class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-950/10">
-                                                <i class="fas fa-bolt text-[9px]"></i>
-                                            </span>
-                                            <span>Bật AI ngay</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <button onclick="moveHeroSlide(-1)" type="button" class="hero-arrow left">
+                <i class="fas fa-chevron-left text-sm"></i>
+            </button>
+            <button onclick="moveHeroSlide(1)" type="button" class="hero-arrow right">
+                <i class="fas fa-chevron-right text-sm"></i>
+            </button>
 
-                <div class="w-full h-full flex-shrink-0 relative">
-                    <img id="banner-img-1" src="" class="w-full h-full object-cover opacity-90" alt="Banner 2">
-                    <div
-                        class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/40 to-transparent flex items-end p-8 md:p-20">
-                        <div class="max-w-7xl mx-auto w-full text-white">
-                            <span
-                                class="bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-widest mb-4 inline-block shadow-lg">CULTURE
-                                EVENT</span>
-                            <h2
-                                class="text-4xl md:text-6xl font-extrabold mb-4 leading-tight tracking-tight text-white drop-shadow-md">
-                                <span id="hero-slide-1-title">À Ố Show</span><br /><span id="hero-slide-1-subtitle"
-                                    class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">Nghệ
-                                    Thuật Xiếc Tre Việt Nam</span>
-                            </h2>
-                            <p
-                                class="text-sm md:text-base font-medium opacity-90 mb-8 max-w-2xl leading-relaxed text-gray-200">
-                                Sự kết hợp đầy lôi cuốn giữa xiếc tre truyền thống Việt Nam và nghệ thuật múa đương đại
-                                đẳng cấp quốc tế tại Nhà Hát Lớn.</p>
-                            <a id="hero-slide-1-cta" href=""
-                                class="bg-gradient-to-r from-purple-500 to-indigo-500 hover:scale-105 active:scale-95 text-white font-bold px-8 py-4 rounded-full transition-all duration-300 text-sm uppercase tracking-wider inline-block shadow-[0_8px_30px_rgb(95,16,130,0.3)]">Khám
-                                Phá Chi Tiết <i class="fas fa-arrow-right ml-2"></i></a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="w-full h-full flex-shrink-0 relative">
-                    <img id="banner-img-2" src="" class="w-full h-full object-cover opacity-90" alt="Banner 3">
-                    <div
-                        class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/40 to-transparent flex items-end p-8 md:p-20">
-                        <div class="max-w-7xl mx-auto w-full text-white">
-                            <span
-                                class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-widest mb-4 inline-block shadow-lg">MUSIC
-                                FESTIVAL</span>
-                            <h2
-                                class="text-4xl md:text-6xl font-extrabold mb-4 leading-tight tracking-tight text-white drop-shadow-md">
-                                <span id="hero-slide-2-title">Lễ Hội Âm Nhạc Điện Tử</span><br /><span
-                                    id="hero-slide-2-subtitle"
-                                    class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Ravolution
-                                    EDM 2026</span>
-                            </h2>
-                            <p
-                                class="text-sm md:text-base font-medium opacity-90 mb-8 max-w-2xl leading-relaxed text-gray-200">
-                                Hòa mình vào bữa tiệc EDM bùng nổ của âm thanh và ánh sáng đỉnh cao với dàn DJ thuộc Top
-                                100 thế giới tại SECC.</p>
-                            <a id="hero-slide-2-cta" href=""
-                                class="bg-gradient-to-r from-blue-500 to-cyan-500 hover:scale-105 active:scale-95 text-white font-bold px-8 py-4 rounded-full transition-all duration-300 text-sm uppercase tracking-wider inline-block shadow-[0_8px_30px_rgb(59,130,246,0.3)]">Đặt
-                                Vé Ngay <i class="fas fa-arrow-right ml-2"></i></a>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <button onclick="moveHeroSlide(-1)" type="button"
-                class="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/30 backdrop-blur-md text-white flex items-center justify-center transition-all border border-white/20 cursor-pointer outline-none z-10 hover:scale-110"><i
-                    class="fas fa-chevron-left"></i></button>
-            <button onclick="moveHeroSlide(1)" type="button"
-                class="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/30 backdrop-blur-md text-white flex items-center justify-center transition-all border border-white/20 cursor-pointer outline-none z-10 hover:scale-110"><i
-                    class="fas fa-chevron-right"></i></button>
-
-            <div id="hero-dots-container" class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-10">
-                <span onclick="setHeroSlide(0)"
-                    class="w-3 h-3 rounded-full bg-white/50 hover:bg-white cursor-pointer transition-all duration-300 hero-dot active shadow-sm"></span>
-                <span onclick="setHeroSlide(1)"
-                    class="w-3 h-3 rounded-full bg-white/50 hover:bg-white cursor-pointer transition-all duration-300 hero-dot shadow-sm"></span>
-                <span onclick="setHeroSlide(2)"
-                    class="w-3 h-3 rounded-full bg-white/50 hover:bg-white cursor-pointer transition-all duration-300 hero-dot shadow-sm"></span>
-            </div>
+            <div id="hero-dots-container"></div>
         </section>
 
-        <!-- ===================== SỰ KIỆN MỚI NHẤT ===================== -->
-        <section class="max-w-7xl mx-auto px-6 py-12">
-            <div class="flex items-center justify-between mb-8 border-b border-gray-100 pb-4">
-                <div class="flex items-baseline gap-4 flex-wrap">
-                    <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight" data-i18n="body.newest_events">SỰ
-                        KIỆN MỚI NHẤT</h2>
-                    <span
-                        class="text-xs font-bold uppercase tracking-wider text-brand-orange bg-orange-55 text-brand-orange px-2.5 py-1 rounded-md">Mới
-                        ra mắt</span>
+        <!-- ═══════════════════════════════════════════
+             STATS RIBBON
+             ═══════════════════════════════════════════ -->
+        <div class="stats-ribbon py-5 px-4">
+            <div class="max-w-7xl mx-auto flex flex-wrap justify-center gap-8 md:gap-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                        style="background:rgba(255,107,43,0.12);border:1px solid rgba(255,107,43,0.2);">
+                        <i class="fas fa-ticket-alt text-sm" style="color:#ff6b2b;"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Sự kiện đang mở</p>
+                        <p id="stat-total-events" class="text-base font-800 font-extrabold text-slate-800">—</p>
+                    </div>
                 </div>
-                <div class="flex items-center gap-6">
-                    <!-- FIX: TỐI ƯU UX - Xóa bỏ link "Xem tất cả" ở mục SỰ KIỆN MỚI NHẤT, giữ nguyên nút mũi tên (Trái/Phải) -->
-                    <div class="hidden sm:flex gap-2">
-                        <button onclick="scrollHorizontally('latest-events-track', -300)"
-                            class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-brand-purple hover:text-white hover:border-brand-purple transition-all duration-300 shadow-sm cursor-pointer"><i
-                                class="fas fa-arrow-left"></i></button>
-                        <button onclick="scrollHorizontally('latest-events-track', 300)"
-                            class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-brand-purple hover:text-white hover:border-brand-purple transition-all duration-300 shadow-sm cursor-pointer"><i
-                                class="fas fa-arrow-right"></i></button>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                        style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.2);">
+                        <i class="fas fa-layer-group text-sm" style="color:#a855f7;"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Danh mục</p>
+                        <p id="stat-categories" class="text-base font-extrabold text-slate-800">—</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                        style="background:rgba(56,189,248,0.10);border:1px solid rgba(56,189,248,0.2);">
+                        <i class="fas fa-map-marker-alt text-sm" style="color:#38bdf8;"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Thành phố</p>
+                        <p id="stat-cities" class="text-base font-extrabold text-slate-800">—</p>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="relative -mx-6 px-6 overflow-hidden">
+        <!-- ═══════════════════════════════════════════
+             SỰ KIỆN MỚI NHẤT
+             ═══════════════════════════════════════════ -->
+        <section class="max-w-7xl mx-auto px-5 py-14">
+            <div class="section-header">
+                <div class="section-label">
+                    <span class="section-eyebrow">Mới ra mắt</span>
+                    <h2 class="section-title-main">Sự Kiện Mới Nhất</h2>
+                </div>
+            </div>
+
+            <div class="relative -mx-5 px-5 overflow-hidden">
                 <div id="latest-events-track"
-                    class="flex gap-8 overflow-x-auto pb-8 pt-4 scrollbar-hide scroll-smooth snap-x">
+                    class="flex gap-5 overflow-x-auto pb-6 pt-2 scrollbar-hide scroll-smooth snap-x">
                     <!-- Dynamic rendering in JS -->
                 </div>
             </div>
         </section>
 
-        <!-- ===================== SỰ KIỆN NỔI BẬT ===================== -->
-        <section class="max-w-7xl mx-auto px-6 py-12">
-            <div class="flex items-center justify-between mb-8 border-b border-gray-100 pb-4">
-                <div class="flex items-baseline gap-4 flex-wrap">
-                    <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">SỰ KIỆN NỔI BẬT</h2>
-                    <span
-                        class="text-xs font-bold uppercase tracking-wider text-brand-purple bg-purple-50 text-brand-purple px-2.5 py-1 rounded-md">Thịnh
-                        hành</span>
+        <div class="section-sep"></div>
+
+        <!-- ═══════════════════════════════════════════
+             SỰ KIỆN NỔI BẬT
+             ═══════════════════════════════════════════ -->
+        <section class="max-w-7xl mx-auto px-5 py-14">
+            <div class="section-header">
+                <div class="section-label">
+                    <span class="section-eyebrow" style="color:#a855f7;">
+                        <span
+                            style="background:#a855f7;width:20px;height:2px;border-radius:99px;display:inline-block;"></span>
+                        Đang thịnh hành
+                    </span>
+                    <h2 class="section-title-main">Sự Kiện Nổi Bật</h2>
                 </div>
-                <div class="flex items-center gap-6">
-                    <!-- FIX: TỐI ƯU UX - Xóa bỏ link "Xem tất cả" ở mục SỰ KIỆN NỔI BẬT, giữ nguyên nút mũi tên (Trái/Phải) -->
-                    <div class="hidden sm:flex gap-2">
-                        <button onclick="scrollHorizontally('featured-events-track', -300)"
-                            class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-brand-purple hover:text-white hover:border-brand-purple transition-all duration-300 shadow-sm cursor-pointer"><i
-                                class="fas fa-arrow-left"></i></button>
-                        <button onclick="scrollHorizontally('featured-events-track', 300)"
-                            class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-brand-purple hover:text-white hover:border-brand-purple transition-all duration-300 shadow-sm cursor-pointer"><i
-                                class="fas fa-arrow-right"></i></button>
-                    </div>
-                </div>
+
             </div>
 
-            <div class="relative -mx-6 px-6 overflow-hidden">
+            <div class="relative -mx-5 px-5 overflow-hidden">
                 <div id="featured-events-track"
-                    class="flex gap-8 overflow-x-auto pb-8 pt-4 scrollbar-hide scroll-smooth snap-x">
+                    class="flex gap-5 overflow-x-auto pb-6 pt-2 scrollbar-hide scroll-smooth snap-x">
                     <!-- Dynamic rendering in JS -->
                 </div>
             </div>
         </section>
 
-        <!-- ===================== TẤT CẢ SỰ KIỆN ===================== -->
-        <section id="all-events-section" class="max-w-7xl mx-auto px-6 py-12">
-            <div class="flex flex-col gap-6 mb-10">
-                <div class="flex flex-col gap-2">
-                    <div class="flex items-baseline gap-3">
-                        <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">TẤT CẢ SỰ KIỆN</h2>
-                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full"
-                            id="all-events-badge-count">0 sự kiện</span>
-                    </div>
-                    <p class="text-sm text-gray-500 font-medium">Tìm kiếm, lọc danh mục và chọn thời gian để nhanh chóng
-                        tìm thấy sự kiện của bạn.</p>
+        <div class="section-sep"></div>
+
+        <!-- ═══════════════════════════════════════════
+             TẤT CẢ SỰ KIỆN
+             ═══════════════════════════════════════════ -->
+        <section id="all-events-section" class="max-w-7xl mx-auto px-5 py-14">
+
+            <!-- Header -->
+            <div class="flex flex-col gap-2 mb-8">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <h2 class="section-title-main">Tất Cả Sự Kiện</h2>
+                    <span id="all-events-badge-count" class="section-badge-count">0 sự kiện</span>
                 </div>
-
-                <!-- Filters -->
-                <div
-                    class="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 bg-white border border-gray-100 rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-                    <!-- FIX: TỐI ƯU UX - Bỏ ô Search thừa, cân đối layout còn 3 cột -->
-                    <select id="event-category-filter"
-                        class="w-full px-4 py-3 rounded-2xl border border-gray-200 text-sm font-semibold outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 transition-all text-gray-800 bg-white">
-                        <option value="">Tất cả danh mục</option>
-                    </select>
-
-                    <select id="event-time-filter"
-                        class="w-full px-4 py-3 rounded-2xl border border-gray-200 text-sm font-semibold outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 transition-all text-gray-800 bg-white">
-                        <option value="">Tất cả thời gian</option>
-                        <option value="upcoming">Sắp diễn ra</option>
-                        <option value="this-week">Trong tuần này</option>
-                        <option value="this-month">Trong tháng nay</option>
-                    </select>
-
-                    <button id="btn-event-filter"
-                        class="px-8 py-3 rounded-2xl bg-brand-orange hover:bg-brand-orangeHover hover:scale-105 active:scale-95 text-white text-sm font-extrabold transition-all duration-300 shadow-md shadow-orange-500/10 cursor-pointer">
-                        Lọc sự kiện
-                    </button>
-                </div>
+                <p class="text-sm text-slate-500">Lọc theo danh mục, thời gian để tìm sự kiện phù hợp nhất với bạn.</p>
             </div>
 
-            <!-- Events Grid -->
-            <div id="all-events-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-12 min-h-[300px]">
+            <!-- Filter Bar -->
+            <div class="filter-bar mb-10">
+                <select id="event-category-filter" aria-label="Lọc theo danh mục">
+                    <option value="">🎭 Tất cả danh mục</option>
+                </select>
+
+                <select id="event-time-filter" aria-label="Lọc theo thời gian">
+                    <option value="">📅 Tất cả thời gian</option>
+                    <option value="upcoming">⏳ Sắp diễn ra</option>
+                    <option value="this-week">📆 Trong tuần này</option>
+                    <option value="this-month">🗓️ Trong tháng nay</option>
+                </select>
+
+                <button id="btn-event-filter" class="filter-btn">
+                    <i class="fas fa-sliders-h mr-2"></i>Lọc sự kiện
+                </button>
+            </div>
+
+            <!-- Grid -->
+            <div id="all-events-grid" class="min-h-[300px]">
                 <!-- Dynamic rendering in JS -->
             </div>
 
-            <!-- Dynamic Numerical Pagination -->
-            <div id="all-events-pagination" class="flex items-center justify-center gap-2 flex-wrap">
-                <!-- JS handles pagination elements -->
-            </div>
+            <!-- Pagination -->
+            <div id="all-events-pagination"></div>
+
         </section>
 
     </main>
 
-    <div id="footer-container" class="bg-white border-t border-gray-100 pt-16"></div>
+    <div id="footer-container" class="pt-14"></div>
 
-    <!-- =====================================================================
-         TEMPLATES — Không hiển thị trên UI, chỉ dùng bởi home.js
-         ===================================================================== -->
+    <!-- ═══════════════════════════════════════════════
+         TEMPLATES — Chỉ dùng bởi home.js (không hiển thị)
+         ═══════════════════════════════════════════════ -->
 
-    <!-- Template: Card sự kiện mới nhất (mini-slider) -->
     <template id="tmpl-latest-event-card">
-        <div
-            class="mini-slider-card snap-start bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer flex flex-col">
-            <div class="h-44 overflow-hidden relative">
-                <img data-field="bannerImage"
-                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="">
-                <div
-                    class="absolute top-3 left-3 bg-white/95 backdrop-blur text-brand-orange text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
-                    <span data-field="categoryName">Sự kiện</span>
-                </div>
+        <div class="mini-slider-card glass-card snap-start">
+            <div class="card-thumb" style="aspect-ratio:16/10;">
+                <img data-field="bannerImage" alt="">
+                <span data-field="categoryName" class="card-cat-tag">Sự kiện</span>
             </div>
-            <div class="p-5 flex flex-col flex-1">
-                <h3 data-field="title"
-                    class="font-bold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-brand-orange transition-colors leading-snug">
-                </h3>
-                <p class="text-sm text-gray-500 mb-4 flex items-center gap-2">
-                    <i class="far fa-calendar-alt text-gray-400"></i>
-                    <span data-field="createdAt"></span>
-                </p>
-                <div class="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Giá từ</p>
-                        <span data-field="minPrice" class="text-brand-orange font-extrabold text-lg"></span>
+            <div class="card-body">
+                <h3 data-field="title" class="card-title"></h3>
+                <div class="card-meta">
+                    <div class="card-meta-row">
+                        <i class="far fa-calendar-alt"></i>
+                        <span data-field="createdAt"></span>
                     </div>
-                    <span
-                        class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center group-hover:bg-brand-orange group-hover:text-white transition-colors text-brand-orange shadow-sm">
-                        <i class="fas fa-arrow-right text-sm"></i>
-                    </span>
+                </div>
+                <div class="card-footer-row">
+                    <div>
+                        <p class="price-label">Giá từ</p>
+                        <span data-field="minPrice" class="price-value"></span>
+                    </div>
+                    <span class="card-arrow-btn"><i class="fas fa-arrow-right"></i></span>
                 </div>
             </div>
         </div>
     </template>
 
-    <!-- Template: Trạng thái rỗng cho mini-slider -->
     <template id="tmpl-latest-event-empty">
-        <div
-            class="w-full flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-gray-200 border-dashed shadow-sm">
-            <i class="far fa-calendar-times text-5xl text-gray-300 mb-4"></i>
-            <p class="text-gray-500 font-medium text-lg">Hiện tại không có sự kiện mới nhất nào được mở bán.</p>
-            <p class="text-gray-400 text-sm mt-1">Vui lòng quay lại sau nhé!</p>
+        <div class="w-full flex flex-col items-center justify-center py-16 rounded-2xl text-center"
+            style="border:1px dashed rgba(167,139,250,0.3);background:rgba(167,139,250,0.05);">
+            <i class="far fa-calendar-times text-5xl mb-4" style="color:#7c3aed;"></i>
+            <p class="font-semibold text-slate-600">Hiện tại không có sự kiện mới nhất nào được mở bán.</p>
+            <p class="text-slate-500 text-sm mt-1">Vui lòng quay lại sau nhé!</p>
         </div>
     </template>
 
-    <!-- Template: Trạng thái lỗi cho mini-slider -->
     <template id="tmpl-latest-event-error">
-        <div class="w-full flex flex-col items-center justify-center py-16 bg-red-50 rounded-2xl border border-red-100">
+        <div class="w-full flex flex-col items-center justify-center py-16 rounded-2xl"
+            style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);">
             <p class="text-red-600 font-medium">Chưa có sự kiện này.</p>
         </div>
     </template>
 
-    <!-- Template: Trạng thái lỗi cho featured events -->
     <template id="tmpl-featured-event-error">
-        <div class="w-full flex flex-col items-center justify-center py-20 bg-red-50 rounded-3xl border border-red-100">
+        <div class="w-full flex flex-col items-center justify-center py-20 rounded-2xl"
+            style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);">
             <p class="text-red-600 font-medium">Chưa có sự kiện này.</p>
         </div>
     </template>
 
-    <!-- =====================================================================
+    <!-- ═══════════════════════════════════════════════
          SCRIPTS
-         ===================================================================== -->
+         ═══════════════════════════════════════════════ -->
     <script src="../assets/js/core/nat-api-client.js"></script>
-    <!-- Header & Footer được load bởi home.js (initializeHomePage), không cần gọi thêm ở đây -->
-    <script src="../assets/js/nat-home.js?v=1.5"></script>
+    <script src="../assets/js/nat-home.js?v=2.0"></script>
     <script src="../assets/js/nat-ai-chat.js"></script>
 
-</body>199
-9
+</body>
+
 </html>

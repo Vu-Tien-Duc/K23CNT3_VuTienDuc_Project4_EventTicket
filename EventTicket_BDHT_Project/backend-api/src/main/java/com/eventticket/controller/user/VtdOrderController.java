@@ -240,22 +240,6 @@ public class VtdOrderController {
     public static class AddTicketRequest {
         private Integer ticketTypeId;
         private Integer quantity;
-
-        public Integer getTicketTypeId() {
-            return ticketTypeId;
-        }
-
-        public void setTicketTypeId(Integer ticketTypeId) {
-            this.ticketTypeId = ticketTypeId;
-        }
-
-        public Integer getQuantity() {
-            return quantity;
-        }
-
-        public void setQuantity(Integer quantity) {
-            this.quantity = quantity;
-        }
     }
 
     /**
@@ -264,14 +248,6 @@ public class VtdOrderController {
     @Data
     public static class UpdateQuantityRequest {
         private Integer quantity;
-
-        public Integer getQuantity() {
-            return quantity;
-        }
-
-        public void setQuantity(Integer quantity) {
-            this.quantity = quantity;
-        }
     }
 
     /**
@@ -280,13 +256,5 @@ public class VtdOrderController {
     @Data
     public static class PromotionRequest {
         private String promotionCode;
-
-        public String getPromotionCode() {
-            return promotionCode;
-        }
-
-        public void setPromotionCode(String promotionCode) {
-            this.promotionCode = promotionCode;
-        }
     }
 }

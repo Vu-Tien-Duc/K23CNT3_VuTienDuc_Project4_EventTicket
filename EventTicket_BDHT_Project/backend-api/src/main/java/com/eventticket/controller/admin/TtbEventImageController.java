@@ -17,6 +17,10 @@ public class TtbEventImageController {
 
     private final TtbEventImageService ttbeventImageService;
 
+    public static class ImageUrlRequest {
+        public String imageUrl;
+    }
+
     // 1. Lấy danh sách ảnh của sự kiện
     @GetMapping
     public ResponseEntity<List<G8_event_image>> getImages(@PathVariable Integer eventId) {
@@ -35,6 +39,19 @@ public class TtbEventImageController {
             return ResponseEntity.ok(savedImage);
         } catch (Exception e) {
             // Bắt lỗi (ví dụ: quá 10 ảnh) và trả về HTTP 400
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    // 2b. Them anh moi bang duong dan URL
+    @PostMapping(consumes = { "application/json" })
+    public ResponseEntity<?> addImageByUrl(
+            @PathVariable Integer eventId,
+            @RequestBody ImageUrlRequest request) {
+        try {
+            G8_event_image savedImage = ttbeventImageService.addEventImageUrl(eventId, request.imageUrl);
+            return ResponseEntity.ok(savedImage);
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }

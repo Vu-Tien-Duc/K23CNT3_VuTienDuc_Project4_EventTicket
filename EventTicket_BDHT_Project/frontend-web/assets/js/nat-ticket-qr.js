@@ -330,9 +330,7 @@ async function updateResellStatusUI(ticket) {
 
     try {
         // Tải danh sách tất cả các hạng vé của sự kiện này từ Backend để đối chiếu
-        const res = await fetch(`http://localhost:8080/api/lpth/admin/ticket-types/event/${eventId}`);
-        if (!res.ok) throw new Error();
-        const ticketTypes = await res.json();
+        const ticketTypes = await window.apiClient.get(`/api/ttb/admin/ticket-types/event/${eventId}`);
 
         // Tìm hạng vé có định dạng tên: "[Resale] {Tên gốc} (#{Mã vé})"
         const expectedName = `[Resale] ${ticket.ticketType.typeName} (#${ticket.ticketId})`;
@@ -424,13 +422,7 @@ async function handleResellSubmit() {
             soldQuantity: 0
         };
 
-        const res = await fetch(`http://localhost:8080/api/lpth/admin/ticket-types/add?eventId=${eventId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) throw new Error('Không thể thêm hạng vé bán lại!');
+        await window.apiClient.post(`/api/ttb/admin/ticket-types/add?eventId=${eventId}`, payload);
 
         alert(`🎉 Chúc mừng! Vé của bạn đã được đăng bán lại thành công lên trang chủ với giá ${resellPrice.toLocaleString('vi-VN')} đ.`);
         
@@ -453,11 +445,7 @@ async function handleResellSubmit() {
  */
 async function handleCancelResell(resaleId) {
     try {
-        const res = await fetch(`http://localhost:8080/api/lpth/admin/ticket-types/delete/${resaleId}`, {
-            method: 'DELETE'
-        });
-
-        if (!res.ok) throw new Error();
+        await window.apiClient.delete(`/api/ttb/admin/ticket-types/delete/${resaleId}`);
 
         alert('✅ Đã gỡ vé khỏi trạng thái rao bán lại thành công!');
         

@@ -1,5 +1,4 @@
 com\eventticket\security\JwtAuthenticationFilter.class
-com\eventticket\controller\user\VtdAuthController$ResetPasswordTokenRequest.class
 com\eventticket\security\JwtUtil.class
 com\eventticket\service\admin\TtbEventImageService.class
 com\eventticket\controller\user\VtdPromotionController.class
@@ -12,6 +11,7 @@ com\eventticket\entity\G8_ticketType.class
 com\eventticket\service\admin\TtbAdminEventService.class
 com\eventticket\service\admin\TtbAdminVenueService.class
 com\eventticket\controller\user\VtdOrderController$PromotionRequest.class
+com\eventticket\controller\admin\TtbEventImageController$ImageUrlRequest.class
 com\eventticket\controller\user\VtdAuthController$VerifyOtpRequest.class
 com\eventticket\controller\user\VtdPaymentController$CreatePaymentRequest.class
 com\eventticket\repository\EventImageRepository.class

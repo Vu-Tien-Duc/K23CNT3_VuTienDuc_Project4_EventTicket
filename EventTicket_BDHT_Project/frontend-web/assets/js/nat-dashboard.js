@@ -202,8 +202,8 @@ async function loadDashboardMetrics() {
         if (uniqueEventIds.length > 0) {
             const ticketTypesResults = await Promise.allSettled(
                 uniqueEventIds.map(eventId =>
-                    fetch(`http://localhost:8080/api/lpth/admin/ticket-types/event/${eventId}`)
-                        .then(r => r.ok ? r.json() : [])
+                    window.apiClient.get(`/api/ttb/admin/ticket-types/event/${eventId}`)
+                        .catch(() => [])
                 )
             );
             uniqueEventIds.forEach((eventId, idx) => {

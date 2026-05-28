@@ -12,9 +12,9 @@
  *   - Khi gỡ sự kiện → xóa ID khỏi localStorage và cập nhật trạng thái backend
  *
  * Luồng tạo sự kiện:
- *   1. Nếu chọn "tạo địa điểm mới" → POST /api/lpth/admin/venues/add → lấy venueId
- *   2. POST /api/lpth/admin/events/add?venueId=X → lấy eventId
- *   3. Với mỗi hạng vé → POST /api/lpth/admin/ticket-types/add?eventId=X
+ *   1. Nếu chọn "tạo địa điểm mới" → POST /api/ttb/admin/venues/add → lấy venueId
+ *   2. POST /api/ttb/admin/events/add?venueId=X → lấy eventId
+ *   3. Với mỗi hạng vé → POST /api/ttb/admin/ticket-types/add?eventId=X
  *   4. Lưu eventId vào localStorage → hiển thị sự kiện vừa đăng
  * ============================================================================
  */
@@ -194,12 +194,10 @@ async function loadVenueOptions() {
 
     try {
         const url = keyword
-            ? `/api/lpth/admin/venues?keyword=${encodeURIComponent(keyword)}`
-            : '/api/lpth/admin/venues';
+            ? `/api/ttb/admin/venues?keyword=${encodeURIComponent(keyword)}`
+            : '/api/ttb/admin/venues';
 
-        const res = await fetch(`http://localhost:8080${url}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const venues = await res.json();
+        const venues = await window.apiClient.get(url);
 
         select.innerHTML = '';
         if (!venues || venues.length === 0) {
@@ -283,16 +281,11 @@ async function handleSellFormSubmit(e) {
                 return;
             }
 
-            const venueRes = await fetch('http://localhost:8080/api/lpth/admin/venues/add', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ venueName, address: venueAddress, capacity: venueCapacity })
+            const newVenue = await window.apiClient.post('/api/ttb/admin/venues/add', {
+                venueName,
+                address: venueAddress,
+                capacity: venueCapacity
             });
-            if (!venueRes.ok) {
-                const err = await venueRes.json().catch(() => ({}));
-                throw new Error(err.message || 'Không thể tạo địa điểm mới!');
-            }
-            const newVenue = await venueRes.json();
             venueId = newVenue.venueId;
 
         } else {
@@ -322,28 +315,16 @@ async function handleSellFormSubmit(e) {
             return;
         }
 
-        const eventRes = await fetch(
-            `http://localhost:8080/api/lpth/admin/events/add?venueId=${venueId}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title,
-                    categoryName: category,
-                    artistNames: artist,
-                    bannerImageUrl: banner,
-                    description,
-                    startTime,
-                    endTime,
-                    status: 'PUBLISHED'
-                })
-            }
-        );
-        if (!eventRes.ok) {
-            const err = await eventRes.json().catch(() => ({}));
-            throw new Error(err.message || 'Không thể tạo sự kiện!');
-        }
-        const newEvent = await eventRes.json();
+        const newEvent = await window.apiClient.post(`/api/ttb/admin/events/add?venueId=${venueId}`, {
+            title,
+            categoryName: category,
+            artistNames: artist,
+            bannerImageUrl: banner,
+            description,
+            startTime,
+            endTime,
+            status: 'PUBLISHED'
+        });
         const eventId  = newEvent.eventId || newEvent.id;
         if (!eventId) throw new Error('Không lấy được ID sự kiện vừa tạo!');
 
@@ -358,10 +339,11 @@ async function handleSellFormSubmit(e) {
             if (!ttName || ttQty < 1) continue;
 
             ticketPromises.push(
-                fetch(`http://localhost:8080/api/lpth/admin/ticket-types/add?eventId=${eventId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ typeName: ttName, price: ttPrice, totalQuantity: ttQty, soldQuantity: 0 })
+                window.apiClient.post(`/api/ttb/admin/ticket-types/add?eventId=${eventId}`, {
+                    typeName: ttName,
+                    price: ttPrice,
+                    totalQuantity: ttQty,
+                    soldQuantity: 0
                 })
             );
         }
@@ -420,10 +402,7 @@ async function loadAndRenderMyEvents() {
     try {
         // Fetch từng event theo ID — chỉ những sự kiện user này tạo
         const fetchResults = await Promise.allSettled(
-            myIds.map(id =>
-                fetch(`http://localhost:8080/api/vtd/public/events/${id}`)
-                    .then(r => r.ok ? r.json() : null)
-            )
+            myIds.map(id => window.apiClient.get(`/api/vtd/public/events/${id}`))
         );
 
         // Lọc lấy kết quả thành công và còn PUBLISHED
@@ -610,15 +589,9 @@ async function removeMyEvent(eventId) {
 
     try {
         // Cập nhật backend: đặt status = CANCELLED
-        const res = await fetch(
-            `http://localhost:8080/api/lpth/admin/events/update/${eventId}`,
-            {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'CANCELLED' })
-            }
-        );
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        await window.apiClient.put(`/api/ttb/admin/events/update/${eventId}`, {
+            status: 'CANCELLED'
+        });
 
         // Xóa khỏi localStorage của user này
         removeMyCreatedEventId(eventId);

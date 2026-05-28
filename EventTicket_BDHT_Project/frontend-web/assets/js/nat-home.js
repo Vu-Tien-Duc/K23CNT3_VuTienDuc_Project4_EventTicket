@@ -23,7 +23,7 @@ function renderEventImage(imageUrl, altText, className = '') {
 }
 
 // KHỞI CHẠY KHI TRANG LOAD
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     await initializeHomePage();
 });
 
@@ -31,10 +31,10 @@ async function initializeHomePage() {
     if (window.pageUtils && window.pageUtils.loadHeader) {
         await window.pageUtils.loadHeader();
     }
-    
+
     // 1. Setup Filter Event Listeners
     setupAllEventsSection();
-    
+
     // 2. Fetch and render API data
     await fetchEvents();
 
@@ -48,37 +48,40 @@ async function fetchEvents() {
     try {
         // Step A: Display loading skeletons
         showSkeletons();
-        
+
         // Step B: Get all published events from Spring Boot (large size to load the full list for client filtering/pagination)
         const response = await window.apiClient.getPublicEvents({ page: 0, size: 999 });
-        
+
         if (!response || !response.content) {
             throw new Error("Không nhận được dữ liệu hợp lệ từ Backend.");
         }
-        
+
         const allEvents = response.content.filter(e => e.status === 'PUBLISHED');
         ALL_EVENTS_DATA = allEvents;
         filteredEvents = [...allEvents];
-        
+
         // Step C: Distribute data
-        
+
+        // 0. Stats Ribbon
+        renderStatsRibbon(allEvents);
+
         // 1. Hero Slider Banners (Use top 3-5 events, sorted by eventId descending or featured)
         const featuredEvents = allEvents.filter(e => e.featured === true || e.status === 'PUBLISHED');
         const sliderEvents = featuredEvents.length > 0 ? featuredEvents.slice(0, 5) : allEvents.slice(0, 5);
         renderHeroSlider(sliderEvents);
-        
+
         // 2. Latest Events (Sorted by createdAt descending)
         const latestTrack = document.getElementById('latest-events-track');
         if (latestTrack) {
             const sortedByNewest = [...allEvents]
                 .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
                 .slice(0, 10);
-            
+
             if (sortedByNewest.length === 0) {
                 latestTrack.innerHTML = `
-                    <div class="w-full col-span-full flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-gray-200 border-dashed shadow-sm text-center">
-                        <i class="far fa-calendar-times text-5xl text-gray-300 mb-4"></i>
-                        <p class="text-gray-500 font-medium text-lg">Hiện tại không có sự kiện mới nhất nào được mở bán.</p>
+                    <div class="w-full flex flex-col items-center justify-center py-16 rounded-2xl text-center" style="border:1.5px dashed rgba(167,139,250,0.3);background:linear-gradient(135deg,#f8f5ff,#fff7f0);">
+                        <i class="far fa-calendar-times text-5xl mb-4" style="color:#c4b5fd;"></i>
+                        <p class="font-semibold" style="color:#3b0764;">Hiện tại không có sự kiện mới nhất nào được mở bán.</p>
                     </div>
                 `;
             } else {
@@ -87,17 +90,17 @@ async function fetchEvents() {
                 setupMarqueeScroll('latest-events-track', 1);
             }
         }
-        
-        // 3. Featured Events (Featured events or default lists)
+
+        // 3. Featured Events
         const featuredTrack = document.getElementById('featured-events-track');
         if (featuredTrack) {
             const featuredList = allEvents.slice(0, 10);
-            
+
             if (featuredList.length === 0) {
                 featuredTrack.innerHTML = `
-                    <div class="w-full col-span-full flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-gray-200 border-dashed shadow-sm text-center">
-                        <i class="far fa-star text-5xl text-gray-300 mb-4"></i>
-                        <p class="text-gray-500 font-medium text-lg">Hiện tại không có sự kiện nổi bật nào được mở bán.</p>
+                    <div class="w-full flex flex-col items-center justify-center py-16 rounded-2xl text-center" style="border:1.5px dashed rgba(167,139,250,0.3);background:linear-gradient(135deg,#f8f5ff,#fff7f0);">
+                        <i class="far fa-star text-5xl mb-4" style="color:#c4b5fd;"></i>
+                        <p class="font-semibold" style="color:#3b0764;">Hiện tại không có sự kiện nổi bật nào được mở bán.</p>
                     </div>
                 `;
             } else {
@@ -106,21 +109,42 @@ async function fetchEvents() {
                 setupMarqueeScroll('featured-events-track', 1.2);
             }
         }
-        
+
         // 4. Categories Filter Options
         populateCategoryFilter(allEvents);
         populateLocationFilter(allEvents);
-        
+
         // 5. Paginated All Events Grid
         currentPage = 1;
         renderAllEventsGrid();
-        
+
         // Step D: Enable Slider Autoplay interval after DOM load
         startHeroInterval();
-        
+
     } catch (error) {
         console.error("Lỗi khi kết nối Backend API:", error);
         showErrorStates();
+    }
+}
+
+// --- STATS RIBBON ---
+function renderStatsRibbon(events) {
+    const totalEl = document.getElementById('stat-total-events');
+    const catEl = document.getElementById('stat-categories');
+    const cityEl = document.getElementById('stat-cities');
+
+    if (totalEl) totalEl.textContent = `${events.length} sự kiện`;
+
+    if (catEl) {
+        const cats = new Set(events.map(e => e.categoryName).filter(Boolean));
+        catEl.textContent = `${cats.size} danh mục`;
+    }
+
+    if (cityEl) {
+        const cities = new Set(
+            events.map(e => e?.venue?.city || extractCityFromAddress(e?.venue?.address)).filter(Boolean)
+        );
+        cityEl.textContent = `${cities.size} thành phố`;
     }
 }
 
@@ -128,10 +152,10 @@ async function fetchEvents() {
 function populateCategoryFilter(events) {
     const categorySelect = document.getElementById('event-category-filter');
     if (!categorySelect) return;
-    
+
     const categories = [...new Set(events.map(e => e.categoryName).filter(c => c !== null && c !== ''))];
     categorySelect.innerHTML = '<option value="">Tất cả danh mục</option>';
-    
+
     categories.forEach(cat => {
         const opt = document.createElement('option');
         opt.value = cat;
@@ -202,25 +226,25 @@ function matchesLocationKeyword(event, keyword) {
 // --- SKELETON LOADING INDICATORS ---
 function showSkeletons() {
     const skeletonCard = `
-        <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm flex flex-col h-full w-[280px] flex-shrink-0 animate-pulse">
-            <div class="w-full aspect-[4/3] bg-slate-200"></div>
-            <div class="p-5 flex-1 flex flex-col gap-3">
-                <div class="h-5 bg-slate-200 rounded w-5/6"></div>
-                <div class="h-4 bg-slate-200 rounded w-1/2"></div>
-                <div class="h-4 bg-slate-200 rounded w-2/3"></div>
-                <div class="h-8 bg-slate-200 rounded mt-4"></div>
+        <div style="min-width:260px;width:260px;background:rgba(255,255,255,0.92);border:1px solid rgba(167,139,250,0.18);border-radius:1.25rem;overflow:hidden;flex-shrink:0;box-shadow:0 4px 20px rgba(124,58,237,0.06);" class="animate-pulse">
+            <div style="width:100%;aspect-ratio:16/10;" class="skeleton-shimmer"></div>
+            <div style="padding:1.1rem 1.2rem;display:flex;flex-direction:column;gap:0.65rem;">
+                <div style="height:14px;border-radius:6px;width:80%;" class="skeleton-shimmer"></div>
+                <div style="height:12px;border-radius:6px;width:55%;" class="skeleton-shimmer"></div>
+                <div style="height:12px;border-radius:6px;width:65%;margin-top:4px;" class="skeleton-shimmer"></div>
+                <div style="height:36px;border-radius:8px;width:100%;margin-top:8px;" class="skeleton-shimmer"></div>
             </div>
         </div>
     `;
-    
+
     const gridSkeleton = `
-        <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm flex flex-col h-full w-full animate-pulse">
-            <div class="w-full aspect-[4/3] bg-slate-200"></div>
-            <div class="p-5 flex-1 flex flex-col gap-3">
-                <div class="h-5 bg-slate-200 rounded w-5/6"></div>
-                <div class="h-4 bg-slate-200 rounded w-1/2"></div>
-                <div class="h-4 bg-slate-200 rounded w-2/3"></div>
-                <div class="h-8 bg-slate-200 rounded mt-4"></div>
+        <div style="background:rgba(255,255,255,0.92);border:1px solid rgba(167,139,250,0.18);border-radius:1.25rem;overflow:hidden;width:100%;box-shadow:0 4px 20px rgba(124,58,237,0.06);" class="animate-pulse">
+            <div style="width:100%;aspect-ratio:16/10;" class="skeleton-shimmer"></div>
+            <div style="padding:1.1rem 1.2rem;display:flex;flex-direction:column;gap:0.65rem;">
+                <div style="height:14px;border-radius:6px;width:80%;" class="skeleton-shimmer"></div>
+                <div style="height:12px;border-radius:6px;width:55%;" class="skeleton-shimmer"></div>
+                <div style="height:12px;border-radius:6px;width:65%;margin-top:4px;" class="skeleton-shimmer"></div>
+                <div style="height:36px;border-radius:8px;width:100%;margin-top:8px;" class="skeleton-shimmer"></div>
             </div>
         </div>
     `;
@@ -241,10 +265,10 @@ function showErrorStates() {
     const grid = document.getElementById('all-events-grid');
 
     const errorHtml = `
-        <div class="w-full col-span-full flex flex-col items-center justify-center py-16 bg-red-50 rounded-2xl border border-red-100 text-center p-6 mx-auto">
-            <i class="fas fa-exclamation-circle text-red-500 text-4xl mb-3"></i>
-            <p class="text-red-700 font-extrabold text-base">Không thể kết nối đến máy chủ Backend</p>
-            <p class="text-red-500 text-xs mt-1">Vui lòng khởi chạy server Spring Boot hoặc kiểm tra kết nối mạng của bạn.</p>
+        <div class="w-full col-span-full flex flex-col items-center justify-center py-16 rounded-2xl text-center p-6" style="background:linear-gradient(135deg,#fff5f5,#fff0f7);border:1.5px solid #fecaca;">
+            <i class="fas fa-exclamation-circle text-4xl mb-3" style="color:#f87171;"></i>
+            <p style="color:#b91c1c;font-weight:700;font-size:0.95rem;">Không thể kết nối đến máy chủ Backend</p>
+            <p style="color:#dc2626;font-size:0.75rem;margin-top:4px;">Vui lòng khởi chạy server Spring Boot hoặc kiểm tra kết nối mạng của bạn.</p>
         </div>
     `;
 
@@ -257,7 +281,7 @@ function showErrorStates() {
 async function updateCardPrice(eventId, elementId) {
     const el = document.getElementById(elementId);
     if (!el) return;
-    
+
     try {
         const ticketTypes = await window.apiClient.get(`/api/vtd/public/ticket-types/${eventId}`);
         if (ticketTypes && ticketTypes.length > 0) {
@@ -274,58 +298,56 @@ async function updateCardPrice(eventId, elementId) {
     }
 }
 
-// --- COMPILING BEAUTIFUL EVENT CARDS ---
+// --- COMPILING BEAUTIFUL EVENT CARDS (Dark Theme) ---
 function createEventCardHtml(event, isGrid = false) {
     const title = event.title || event.name || 'Sự kiện';
     const venue = event.venue ? event.venue.venueName : (event.location || 'Địa điểm tổ chức');
     const id = event.eventId || event.id;
     const img = getEventImageUrl(event);
-    
-    // FIX: Không dùng giá trị địa điểm giả; chỉ hiển thị dữ liệu thực từ backend hoặc nhãn trung lập.
+
+    // Chỉ hiển thị dữ liệu thực từ backend.
     let city = event?.venue?.city || extractCityFromAddress(event?.venue?.address) || 'Địa điểm';
-    if (city) {
-        city = city.toUpperCase();
-    }
-    
+    if (city) city = city.toUpperCase();
+
     const date = event.startTime ? new Date(event.startTime).toLocaleDateString('vi-VN') : 'Sắp diễn ra';
     const category = event.categoryName || 'Sự kiện';
     const detailUrl = getDetailPath(id);
 
-    const widthClass = isGrid ? 'w-full' : 'w-[280px] flex-shrink-0';
+    const widthStyle = isGrid ? '' : 'min-width:260px;width:260px;flex-shrink:0;';
     const priceElementId = `card-price-${id}-${isGrid ? 'grid' : 'track'}-${Math.random().toString(36).substr(2, 5)}`;
 
     // Update the price asynchronously in the background
-    setTimeout(() => {
-        updateCardPrice(id, priceElementId);
-    }, 10);
+    setTimeout(() => updateCardPrice(id, priceElementId), 10);
+
+    const imgHtml = img
+        ? `<img src="${img}" class="w-full h-full object-cover" style="transition:transform 0.6s ease;" alt="${title}" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">`
+        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f3e8ff,#fce7f3);"><i class="fas fa-image" style="font-size:1.5rem;color:#c4b5fd;"></i></div>`;
 
     return `
-        <a href="${detailUrl}" class="group block bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 ease-in-out cursor-pointer flex flex-col h-full ${widthClass}">
-            <div class="relative w-full aspect-[4/3] overflow-hidden bg-slate-100 flex-shrink-0">
-                <span class="absolute top-3 left-3 bg-white/95 backdrop-blur-md text-brand-purple text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm z-10">${city}</span>
-                ${renderEventImage(img, title, 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out')}
-                <div class="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white font-extrabold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider z-10">${category}</div>
+        <a href="${detailUrl}" class="glass-card group" style="${widthStyle}text-decoration:none;">
+            <div class="card-thumb">
+                ${imgHtml}
+                <span class="card-city-tag">${city}</span>
+                <span class="card-cat-tag">${category}</span>
             </div>
-            <div class="p-5 flex-1 flex flex-col justify-between">
-                <div>
-                    <h3 class="font-extrabold text-slate-800 group-hover:text-brand-purple transition-colors text-base line-clamp-2 leading-snug tracking-tight mb-3" title="${title}">${title}</h3>
-                    <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-2">
-                        <i class="fas fa-map-marker-alt text-brand-orange/80"></i>
-                        <span class="line-clamp-1">${venue}</span>
+            <div class="card-body">
+                <h3 class="card-title" title="${title}">${title}</h3>
+                <div class="card-meta">
+                    <div class="card-meta-row">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span style="overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;">${venue}</span>
                     </div>
-                    <div class="flex items-center gap-2 text-xs font-bold text-slate-600 mb-4">
-                        <i class="far fa-calendar-alt text-brand-purple/80"></i>
+                    <div class="card-meta-row">
+                        <i class="far fa-calendar-alt" style="color:rgba(168,85,247,0.7);"></i>
                         <span>${date}</span>
                     </div>
                 </div>
-                <div class="border-t border-slate-100 pt-4 mt-auto flex items-center justify-between">
+                <div class="card-footer-row">
                     <div>
-                        <p class="text-[9px] uppercase tracking-wider text-gray-400 font-bold">Giá vé từ</p>
-                        <span id="${priceElementId}" class="text-brand-orange font-black text-lg">Đang tải...</span>
+                        <p class="price-label">Giá vé từ</p>
+                        <span id="${priceElementId}" class="price-value">Đang tải...</span>
                     </div>
-                    <span class="w-10 h-10 rounded-full bg-orange-50 text-brand-orange flex items-center justify-center group-hover:bg-brand-orange group-hover:text-white transition-all duration-300">
-                        <i class="fas fa-arrow-right text-sm"></i>
-                    </span>
+                    <span class="card-arrow-btn"><i class="fas fa-arrow-right"></i></span>
                 </div>
             </div>
         </a>
@@ -340,81 +362,71 @@ function renderHeroSlider(events) {
     const track = document.getElementById('hero-slider-track');
     const dotsContainer = document.getElementById('hero-dots-container');
     if (!track) return;
-    
+
     track.innerHTML = '';
     if (dotsContainer) dotsContainer.innerHTML = '';
-    
+
     if (events.length === 0) {
         track.innerHTML = `
-            <div class="w-full h-full flex-shrink-0 relative bg-slate-900 flex items-center justify-center">
-                <div class="text-white text-center">
-                    <h2 class="text-3xl font-bold mb-2">BDHT Event Ticketing</h2>
-                    <p class="text-gray-400">Kênh bán vé sự kiện hiện đại, nhanh chóng và uy tín hàng đầu</p>
+            <div class="hero-slide" style="display:flex;align-items:center;justify-content:center;background:#080b14;">
+                <div style="text-align:center;color:#fff;">
+                    <h2 style="font-size:2rem;font-weight:900;margin-bottom:0.5rem;">BDHT Event Ticketing</h2>
+                    <p style="color:#64748b;">Kênh bán vé sự kiện hiện đại, nhanh chóng và uy tín hàng đầu</p>
                 </div>
             </div>
         `;
         return;
     }
-    
-        events.forEach((event, index) => {
+
+    events.forEach((event, index) => {
         const title = event.title || 'Sự kiện âm nhạc';
         const description = event.description || 'Hòa mình vào thế giới sự kiện đầy lôi cuốn cùng hệ thống bán vé chuyên nghiệp BDHT.';
         const id = event.eventId;
         const img = getEventImageUrl(event);
-        const category = event.categoryName || 'HOT CONCERT';
+        const category = event.categoryName || 'HOT EVENT';
         const detailUrl = getDetailPath(id);
+        const date = event.startTime ? new Date(event.startTime).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+        const venue = event.venue ? event.venue.venueName : (event.location || '');
 
-        // FIX: Đồng bộ dữ liệu thật cho các slide (ID đã gắn sẵn trong index.html)
-        // Chỉ gán cho tối đa 3 slide vì HTML hiện hỗ trợ hero-slide-0..2
-        const titleEl = document.getElementById(`hero-slide-${index}-title`);
-        const subtitleEl = document.getElementById(`hero-slide-${index}-subtitle`);
-        const ctaEl = document.getElementById(`hero-slide-${index}-cta`);
-        const bannerImgEl = document.getElementById(`banner-img-${index}`);
-
-        if (titleEl) titleEl.innerText = title;
-        if (subtitleEl) subtitleEl.innerText = category;
-        if (ctaEl) ctaEl.href = detailUrl;
-        if (bannerImgEl) {
-            if (img) {
-                bannerImgEl.src = img;
-                bannerImgEl.style.display = '';
-            } else {
-                bannerImgEl.removeAttribute('src');
-                bannerImgEl.style.display = 'none';
-            }
-        }
+        const imgHtml = img
+            ? `<img src="${img}" alt="${title}" style="width:100%;height:100%;object-fit:cover;opacity:0.8;transition:transform 8s ease,opacity 0.9s ease;">`
+            : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a0a2e,#0d1a3a);"></div>`;
 
         const slide = document.createElement('div');
-        slide.className = 'w-full h-full flex-shrink-0 relative';
+        slide.className = 'hero-slide';
         slide.innerHTML = `
-            <div class="w-full h-full bg-slate-900">
-                ${renderEventImage(img, title, 'w-full h-full object-cover opacity-90')}
-            </div>
-            <div class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/40 to-transparent flex items-end p-8 md:p-20">
-                <div class="max-w-7xl mx-auto w-full text-white">
-                    <span class="bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold text-[11px] px-4 py-1.5 rounded-full uppercase tracking-widest mb-4 inline-block shadow-lg">${category}</span>
-                    <h2 class="text-4xl md:text-6xl font-extrabold mb-4 leading-tight tracking-tight text-white drop-shadow-md">
-                        ${title}
+            ${imgHtml}
+            <div class="hero-overlay">
+                <div class="hero-content">
+                    <span class="hero-badge">
+                        <span class="dot-live"></span>
+                        ${category}
+                    </span>
+                    <h2 class="hero-title">
+                        ${title.split(' ').slice(0, Math.ceil(title.split(' ').length / 2)).join(' ')}<br>
+                        <span class="accent">${title.split(' ').slice(Math.ceil(title.split(' ').length / 2)).join(' ')}</span>
                     </h2>
-                    <p class="text-sm md:text-base font-medium opacity-90 mb-8 max-w-2xl leading-relaxed text-gray-200 line-clamp-2">
-                        ${description}
-                    </p>
-                    <a href="${detailUrl}" class="bg-gradient-to-r from-orange-500 to-rose-500 hover:scale-105 active:scale-95 text-white font-bold px-8 py-4 rounded-full transition-all duration-300 text-sm uppercase tracking-wider inline-block shadow-[0_8px_30px_rgb(242,111,33,0.3)]">
-                        Mua Vé Ngay <i class="fas fa-arrow-right ml-2"></i>
-                    </a>
+                    <p class="hero-desc">${description.substring(0, 160)}${description.length > 160 ? '...' : ''}</p>
+                    <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+                        <a href="${detailUrl}" class="hero-cta">
+                            Mua Vé Ngay <i class="fas fa-arrow-right"></i>
+                        </a>
+                        ${date ? `<span style="color:rgba(226,232,240,0.55);font-size:0.8rem;font-weight:600;"><i class="far fa-calendar-alt" style="margin-right:0.4rem;color:#ff6b2b;"></i>${date}</span>` : ''}
+                        ${venue ? `<span style="color:rgba(226,232,240,0.55);font-size:0.8rem;font-weight:600;"><i class="fas fa-map-marker-alt" style="margin-right:0.4rem;color:#a855f7;"></i>${venue}</span>` : ''}
+                    </div>
                 </div>
             </div>
         `;
         track.appendChild(slide);
 
         if (dotsContainer) {
-            const dot = document.createElement('span');
-            dot.className = `w-3 h-3 rounded-full bg-white/50 hover:bg-white cursor-pointer transition-all duration-300 hero-dot shadow-sm`;
+            const dot = document.createElement('div');
+            dot.className = 'hero-dot';
             dot.addEventListener('click', () => setHeroSlide(index));
             dotsContainer.appendChild(dot);
         }
     });
-    
+
     heroIndex = 0;
     showHeroSlide(0);
 }
@@ -423,32 +435,47 @@ function showHeroSlide(idx) {
     const track = document.getElementById('hero-slider-track');
     const dots = document.querySelectorAll('.hero-dot');
     if (!track) return;
-    
+
     const slidesCount = track.children.length;
     if (slidesCount === 0) return;
-    
+
     if (idx >= slidesCount) heroIndex = 0;
     if (idx < 0) heroIndex = slidesCount - 1;
 
     track.style.transform = `translateX(-${heroIndex * 100}%)`;
-    
+
+    // Animate the active slide image (ken burns)
+    Array.from(track.children).forEach((slide, i) => {
+        const img = slide.querySelector('img');
+        if (img) {
+            if (i === heroIndex) {
+                slide.classList.add('is-active');
+                img.style.transform = 'scale(1.06)';
+            } else {
+                slide.classList.remove('is-active');
+                img.style.transform = 'scale(1)';
+            }
+        }
+    });
+
+    // Update pill dots
     dots.forEach((dot, index) => {
         if (index === heroIndex) {
-            dot.className = 'w-6 h-3 rounded-full bg-orange-500 cursor-pointer transition-all duration-300 hero-dot active shadow-sm';
+            dot.classList.add('active');
         } else {
-            dot.className = 'w-3 h-3 rounded-full bg-white/50 hover:bg-white cursor-pointer transition-all duration-300 hero-dot shadow-sm';
+            dot.classList.remove('active');
         }
     });
 }
 
-window.moveHeroSlide = function(n) {
+window.moveHeroSlide = function (n) {
     clearInterval(heroInterval);
     heroIndex += n;
     showHeroSlide(heroIndex);
     startHeroInterval();
 };
 
-window.setHeroSlide = function(idx) {
+window.setHeroSlide = function (idx) {
     clearInterval(heroInterval);
     heroIndex = idx;
     showHeroSlide(heroIndex);
@@ -458,7 +485,7 @@ window.setHeroSlide = function(idx) {
 function startHeroInterval() {
     const track = document.getElementById('hero-slider-track');
     if (!track || track.children.length <= 1) return;
-    
+
     clearInterval(heroInterval);
     heroInterval = setInterval(() => {
         heroIndex++;
@@ -471,36 +498,36 @@ function startHeroInterval() {
 function setupMarqueeScroll(trackId, speed = 1) {
     const track = document.getElementById(trackId);
     if (!track) return;
-    
+
     let scrollInterval;
     let isHovered = false;
-    
+
     const startScroll = () => {
         clearInterval(scrollInterval);
         scrollInterval = setInterval(() => {
             if (isHovered) return;
             track.scrollLeft += speed;
-            
+
             // Loop scroll seamlessly
             if (track.scrollLeft >= (track.scrollWidth - track.clientWidth - 4)) {
                 track.scrollLeft = 0;
             }
         }, 30);
     };
-    
+
     track.addEventListener('mouseenter', () => {
         isHovered = true;
     });
-    
+
     track.addEventListener('mouseleave', () => {
         isHovered = false;
     });
-    
+
     startScroll();
 }
 
 // Manual scroll triggers
-window.scrollHorizontally = function(trackId, amount) {
+window.scrollHorizontally = function (trackId, amount) {
     const track = document.getElementById(trackId);
     if (track) {
         track.scrollBy({ left: amount, behavior: 'smooth' });
@@ -586,7 +613,7 @@ function setupAllEventsSection() {
 async function renderAllEventsGrid() {
     const grid = document.getElementById('all-events-grid');
     const badgeCount = document.getElementById('all-events-badge-count');
-    
+
     if (!grid) return;
 
     const keywordInput = document.getElementById('header-search-keyword') || document.querySelector('#header-container input');
@@ -654,28 +681,28 @@ async function renderAllEventsGrid() {
             badgeCount.innerText = `${filteredEvents.length} sự kiện`;
         }
 
-    // 3. RENDER EMPTY STATE IF ZERO
-    if (filteredEvents.length === 0) {
-        grid.innerHTML = `
-            <div class="col-span-full flex flex-col items-center justify-center py-16 bg-white rounded-3xl border border-gray-100 p-6 text-center shadow-sm w-full">
-                <i class="far fa-calendar-times text-5xl text-gray-300 mb-4"></i>
-                <p class="text-gray-500 font-extrabold text-lg">Không tìm thấy sự kiện nào</p>
-                <p class="text-gray-400 text-sm mt-1">Vui lòng thay đổi bộ lọc hoặc từ khóa tìm kiếm và thử lại nhé.</p>
+        // 3. RENDER EMPTY STATE IF ZERO
+        if (filteredEvents.length === 0) {
+            grid.innerHTML = `
+            <div class="col-span-full flex flex-col items-center justify-center py-16 p-6 text-center rounded-2xl" style="background:linear-gradient(135deg,#f8f5ff,#fff7f0);border:1.5px dashed rgba(167,139,250,0.35);">
+                <i class="far fa-calendar-times text-5xl mb-4" style="color:#c4b5fd;"></i>
+                <p style="color:#3b0764;font-weight:700;font-size:1rem;">Không tìm thấy sự kiện nào</p>
+                <p style="color:#6b7280;font-size:0.8rem;margin-top:4px;">Vui lòng thay đổi bộ lọc và thử lại nhé.</p>
             </div>
         `;
-        const paginationContainer = document.getElementById('all-events-pagination');
-        if (paginationContainer) paginationContainer.innerHTML = '';
-        return;
-    }
+            const paginationContainer = document.getElementById('all-events-pagination');
+            if (paginationContainer) paginationContainer.innerHTML = '';
+            return;
+        }
 
-    // 4. SLICING & RENDERING (Max 16 items per page)
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const slicedList = filteredEvents.slice(startIndex, startIndex + itemsPerPage);
+        // 4. SLICING & RENDERING (Max 16 items per page)
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const slicedList = filteredEvents.slice(startIndex, startIndex + itemsPerPage);
 
-    grid.innerHTML = slicedList.map(event => createEventCardHtml(event, true)).join('');
+        grid.innerHTML = slicedList.map(event => createEventCardHtml(event, true)).join('');
 
-    // 5. UPDATE PAGINATION CONTROLS
-    renderPaginationControls(filteredEvents.length);
+        // 5. UPDATE PAGINATION CONTROLS
+        renderPaginationControls(filteredEvents.length);
     } catch (error) {
         console.error("Lỗi khi tải dữ liệu:", error);
         grid.innerHTML = '<div class="col-span-full text-center text-red-500 py-10">Lỗi khi tải dữ liệu từ máy chủ!</div>';
@@ -711,30 +738,41 @@ function renderPaginationControls(totalCount) {
     const totalPages = Math.ceil(totalCount / itemsPerPage);
     if (totalPages <= 1) return;
 
+    const baseStyle = 'font-family:Outfit,sans-serif;font-size:0.82rem;font-weight:700;border-radius:0.65rem;padding:0.6rem 1rem;cursor:pointer;display:inline-flex;align-items:center;gap:0.35rem;transition:all 0.25s ease;border:1.5px solid rgba(167,139,250,0.22);';
+    const activeStyle = baseStyle + 'background:linear-gradient(135deg,#f97316,#ec4899);color:#fff;box-shadow:0 4px 16px rgba(249,115,22,0.32);border-color:transparent;';
+    const inactiveStyle = baseStyle + 'background:rgba(255,255,255,0.85);color:#7c3aed;';
+    const disabledStyle = baseStyle + 'background:rgba(255,255,255,0.4);color:#c4b5fd;pointer-events:none;border-color:rgba(167,139,250,0.12);';
+
     // Prev Button
     const prevBtn = document.createElement('button');
     if (currentPage === 1) {
-        prevBtn.className = 'border border-gray-100 text-gray-300 bg-gray-50 px-4 py-2.5 rounded-xl font-bold text-sm pointer-events-none flex items-center gap-1';
+        prevBtn.style.cssText = disabledStyle;
         prevBtn.disabled = true;
     } else {
-        prevBtn.className = 'border border-gray-200 text-slate-700 hover:bg-orange-50 hover:text-brand-orange hover:border-brand-orange px-4 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 cursor-pointer flex items-center gap-1';
-        prevBtn.addEventListener('click', () => {
-            goToPage(currentPage - 1);
-        });
+        prevBtn.style.cssText = inactiveStyle;
+        prevBtn.onmouseover = () => { prevBtn.style.background = 'rgba(249,115,22,0.08)'; prevBtn.style.color = '#f97316'; prevBtn.style.borderColor = 'rgba(249,115,22,0.35)'; };
+        prevBtn.onmouseout = () => { prevBtn.style.background = 'rgba(255,255,255,0.85)'; prevBtn.style.color = '#7c3aed'; prevBtn.style.borderColor = 'rgba(167,139,250,0.22)'; };
+        prevBtn.addEventListener('click', () => goToPage(currentPage - 1));
     }
-    prevBtn.innerHTML = `<i class="fas fa-chevron-left text-xs"></i> Trang trước`;
+    prevBtn.innerHTML = `<i class="fas fa-chevron-left" style="font-size:0.7rem;"></i> Trước`;
     container.appendChild(prevBtn);
 
     // Dynamic Numbers List
-    for (let i = 1; i <= totalPages; i++) {
+    const maxVisible = 7;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
+
+    for (let i = startPage; i <= endPage; i++) {
         const pageBtn = document.createElement('button');
         if (i === currentPage) {
-            pageBtn.className = 'bg-brand-orange text-white shadow-md shadow-orange-500/20 px-4 py-2.5 rounded-xl font-bold text-sm transition-all duration-300';
+            pageBtn.style.cssText = activeStyle;
         } else {
-            pageBtn.className = 'border border-gray-200 text-slate-700 hover:bg-orange-50 hover:text-brand-orange hover:border-brand-orange px-4 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 cursor-pointer';
-            pageBtn.addEventListener('click', () => {
-                goToPage(i);
-            });
+            pageBtn.style.cssText = inactiveStyle;
+            const pi = i;
+            pageBtn.onmouseover = () => { pageBtn.style.background = 'rgba(249,115,22,0.08)'; pageBtn.style.color = '#f97316'; pageBtn.style.borderColor = 'rgba(249,115,22,0.35)'; };
+            pageBtn.onmouseout = () => { pageBtn.style.background = 'rgba(255,255,255,0.85)'; pageBtn.style.color = '#7c3aed'; pageBtn.style.borderColor = 'rgba(167,139,250,0.22)'; };
+            pageBtn.addEventListener('click', () => goToPage(pi));
         }
         pageBtn.innerText = i;
         container.appendChild(pageBtn);
@@ -743,15 +781,15 @@ function renderPaginationControls(totalCount) {
     // Next Button
     const nextBtn = document.createElement('button');
     if (currentPage === totalPages) {
-        nextBtn.className = 'border border-gray-100 text-gray-300 bg-gray-50 px-4 py-2.5 rounded-xl font-bold text-sm pointer-events-none flex items-center gap-1';
+        nextBtn.style.cssText = disabledStyle;
         nextBtn.disabled = true;
     } else {
-        nextBtn.className = 'border border-gray-200 text-slate-700 hover:bg-orange-50 hover:text-brand-orange hover:border-brand-orange px-4 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 cursor-pointer flex items-center gap-1';
-        nextBtn.addEventListener('click', () => {
-            goToPage(currentPage + 1);
-        });
+        nextBtn.style.cssText = inactiveStyle;
+        nextBtn.onmouseover = () => { nextBtn.style.background = 'rgba(249,115,22,0.08)'; nextBtn.style.color = '#f97316'; nextBtn.style.borderColor = 'rgba(249,115,22,0.35)'; };
+        nextBtn.onmouseout = () => { nextBtn.style.background = 'rgba(255,255,255,0.85)'; nextBtn.style.color = '#7c3aed'; nextBtn.style.borderColor = 'rgba(167,139,250,0.22)'; };
+        nextBtn.addEventListener('click', () => goToPage(currentPage + 1));
     }
-    nextBtn.innerHTML = `Trang sau <i class="fas fa-chevron-right text-xs"></i>`;
+    nextBtn.innerHTML = `Sau <i class="fas fa-chevron-right" style="font-size:0.7rem;"></i>`;
     container.appendChild(nextBtn);
 }
 
@@ -766,7 +804,7 @@ function goToPage(page) {
 }
 
 // --- REDIRECT TRIGGER ON CAROUSEL HEADER ACTIONS ---
-window.scrollToAllEvents = function(type) {
+window.scrollToAllEvents = function (type) {
     const section = document.getElementById('all-events-section');
     if (!section) return;
 

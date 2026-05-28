@@ -476,27 +476,41 @@ function renderTicketTypesSelect(ticketTypes, container) {
 
         let qtySelector = '';
         if (soldOut) {
-            qtySelector = `<span class="bg-red-50 text-red-500 font-extrabold px-3 py-1 rounded-lg text-[10px] tracking-wider border border-red-150 uppercase shadow-sm">Bán hết</span>`;
+            qtySelector = `<span class="bg-red-50 text-red-500 font-extrabold px-3 py-1 rounded-full text-[10px] tracking-wider border border-red-100 uppercase shadow-sm whitespace-nowrap">Hết vé</span>`;
         } else {
             qtySelector = `
-                <div class="flex items-center border border-gray-250 rounded-xl overflow-hidden bg-white shadow-sm">
-                    <button type="button" onclick="changeSidebarTicketQty(${ticket.id}, -1)" class="w-8 h-8 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-black flex items-center justify-center transition-colors text-sm border-r border-gray-200">-</button>
-                    <span id="qty-sidebar-${ticket.id}" class="w-8 text-center font-extrabold text-sm text-slate-800">${qty}</span>
-                    <button type="button" onclick="changeSidebarTicketQty(${ticket.id}, 1)" class="w-8 h-8 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 font-black flex items-center justify-center transition-colors text-sm border-l border-gray-200">+</button>
+                <div class="flex items-center bg-white border border-purple-100 rounded-full p-0.5 shadow-sm">
+                    <button type="button" onclick="changeSidebarTicketQty(${ticket.id}, -1)" 
+                        class="w-7 h-7 bg-purple-50 hover:bg-purple-100 hover:scale-105 active:scale-95 text-brand-purple font-black flex items-center justify-center rounded-full transition-all text-xs focus:outline-none">-</button>
+                    <span id="qty-sidebar-${ticket.id}" class="w-7 text-center font-extrabold text-xs text-slate-800">${qty}</span>
+                    <button type="button" onclick="changeSidebarTicketQty(${ticket.id}, 1)" 
+                        class="w-7 h-7 bg-purple-50 hover:bg-purple-100 hover:scale-105 active:scale-95 text-brand-purple font-black flex items-center justify-center rounded-full transition-all text-xs focus:outline-none">+</button>
                 </div>
             `;
         }
 
+        const isSelected = qty > 0;
+        const remainingBadge = remaining < 10 
+            ? `<span class="inline-flex items-center text-[9px] font-bold bg-red-50 text-red-500 border border-red-200 px-2 py-0.5 rounded-full whitespace-nowrap"><i class="fas fa-exclamation-triangle mr-1 text-[8px]"></i>Sắp hết! Còn ${remaining} vé</span>`
+            : `<span class="inline-flex items-center text-[9px] font-medium bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-full whitespace-nowrap">Còn ${remaining} vé</span>`;
+
+        const containerClasses = isSelected
+            ? 'border-brand-purple bg-gradient-to-r from-purple-50/50 to-pink-50/30 shadow-md scale-[1.02]'
+            : 'border-purple-100/30 bg-white hover:border-brand-purple/30 hover:shadow-sm';
+
         return `
-            <div class="flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-300 ${qty > 0 ? 'border-brand-orange bg-orange-50/20 text-brand-orange shadow-md font-bold' : 'border-gray-100 hover:border-gray-200 text-slate-700 bg-white'}">
-                <div class="flex flex-col gap-1 pr-2 flex-1">
-                    <span class="font-extrabold text-slate-900 tracking-wide text-sm">${ticket.name}</span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold text-slate-400">Còn ${remaining} vé</span>
+            <div class="flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all duration-300 ${containerClasses}">
+                <div class="flex flex-col gap-1.5 flex-1 min-w-0 pr-3">
+                    <div class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-ticket text-xs ${isSelected ? 'text-brand-purple' : 'text-slate-400'} flex-shrink-0"></i>
+                        <span class="font-extrabold text-slate-900 tracking-wide text-xs md:text-sm truncate">${ticket.name}</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 mt-0.5">
+                        <span class="text-brand-orange text-xs md:text-sm font-black whitespace-nowrap">${price}</span>
+                        ${remainingBadge}
                     </div>
                 </div>
-                <div class="flex items-center gap-4 flex-shrink-0">
-                    <span class="text-brand-orange text-sm font-black whitespace-nowrap">${price}</span>
+                <div class="flex items-center flex-shrink-0">
                     ${qtySelector}
                 </div>
             </div>
