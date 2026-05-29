@@ -12,9 +12,9 @@
  *   - Khi gỡ sự kiện → xóa ID khỏi localStorage và cập nhật trạng thái backend
  *
  * Luồng tạo sự kiện:
- *   1. Nếu chọn "tạo địa điểm mới" → POST /api/ttb/admin/venues/add → lấy venueId
- *   2. POST /api/ttb/admin/events/add?venueId=X → lấy eventId
- *   3. Với mỗi hạng vé → POST /api/ttb/admin/ticket-types/add?eventId=X
+ *   1. Nếu chọn "tạo địa điểm mới" → POST /api/lpth/admin/venues/add → lấy venueId
+ *   2. POST /api/lpth/admin/events/add?venueId=X → lấy eventId
+ *   3. Với mỗi hạng vé → POST /api/lpth/admin/ticket-types/add?eventId=X
  *   4. Lưu eventId vào localStorage → hiển thị sự kiện vừa đăng
  * ============================================================================
  */
@@ -223,8 +223,8 @@ async function loadVenueOptions() {
 
     try {
         const url = keyword
-            ? `/api/ttb/admin/venues?keyword=${encodeURIComponent(keyword)}`
-            : '/api/ttb/admin/venues';
+            ? `/api/lpth/admin/venues?keyword=${encodeURIComponent(keyword)}`
+            : '/api/lpth/admin/venues';
 
         const res = await fetch(`http://localhost:8080${url}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -312,7 +312,7 @@ async function handleSellFormSubmit(e) {
                 return;
             }
 
-            const venueRes = await fetch('http://localhost:8080/api/ttb/admin/venues/add', {
+            const venueRes = await fetch('http://localhost:8080/api/lpth/admin/venues/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ venueName, address: venueAddress, capacity: venueCapacity })
@@ -356,7 +356,7 @@ async function handleSellFormSubmit(e) {
         }
 
         const eventRes = await fetch(
-            `http://localhost:8080/api/ttb/admin/events/add?venueId=${venueId}`,
+            `http://localhost:8080/api/lpth/admin/events/add?venueId=${venueId}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -391,7 +391,7 @@ async function handleSellFormSubmit(e) {
             if (!ttName || ttQty < 1) continue;
 
             ticketPromises.push(
-                fetch(`http://localhost:8080/api/ttb/admin/ticket-types/add?eventId=${eventId}`, {
+                fetch(`http://localhost:8080/api/lpth/admin/ticket-types/add?eventId=${eventId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ typeName: ttName, price: ttPrice, totalQuantity: ttQty, soldQuantity: 0 })
@@ -644,7 +644,7 @@ async function removeMyEvent(eventId) {
     try {
         // Gỡ sự kiện: dùng DELETE (xóa mềm - backend set deletedAt)
         const res = await fetch(
-            `http://localhost:8080/api/ttb/admin/events/delete/${eventId}`,
+            `http://localhost:8080/api/lpth/admin/events/delete/${eventId}`,
             { method: 'DELETE' }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
