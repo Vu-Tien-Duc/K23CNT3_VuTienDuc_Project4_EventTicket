@@ -9,76 +9,96 @@
     await initAiChat();
 });
 
-const GUEST_CHAT_STORAGE_KEY = 'bdhtGuestChatHistory';
+const CHAT_HISTORY_STORAGE_KEY = 'bdhtLocalChatHistory';
 let currentChatBox = null;
-let currentChatState = null;
 let currentChatInput = null;
+let currentQuickRepliesContainer = null;
+let currentQuickRepliesInner = null;
+let chatSessionCode = '';
 
-function ensureChatWidgetState() {
-    if (!window.chatWidgetState || typeof window.chatWidgetState !== 'object') {
-        window.chatWidgetState = { sessionCode: '' };
+// FAQs base for instant client-side responses if AI fails or to speed up common interactions
+const FAQ_KNOWLEDGE_BASE = [
+    {
+        keywords: ['thanh toán', 'chuyển khoản', 'vnpay', 'momo', 'thẻ', 'payment', 'mua vé thế nào'],
+        title: '💳 Phương thức & Quy trình thanh toán',
+        answer: `BDHT hỗ trợ nhiều phương thức thanh toán an toàn và tiện lợi:\n\n` +
+            `1. **Cổng VNPay**: Thẻ ATM nội địa, QR Code ngân hàng.\n` +
+            `2. **Ví Momo / ShopeePay**.\n` +
+            `3. **Thẻ quốc tế**: Visa, Mastercard, JCB.\n\n` +
+            `**Quy trình mua vé & thanh toán:**\n` +
+            `Bước 1: Chọn sự kiện bạn yêu thích.\n` +
+            `Bước 2: Click **"Mua vé ngay"** và chọn loại vé, số lượng.\n` +
+            `Bước 3: Nhập thông tin người nhận vé (Họ tên, Email, SĐT).\n` +
+            `Bước 4: Click **"Thanh toán"** và quét mã QR hoặc nhập thông tin thẻ để hoàn tất.\n\n` +
+            `Vé điện tử kèm **mã QR** sẽ được gửi trực tiếp qua Email của bạn ngay sau khi thanh toán thành công!`,
+        chips: ['🎫 Xem sự kiện', '📞 Liên hệ hỗ trợ', '🔄 Đổi/Hủy vé']
+    },
+    {
+        keywords: ['đổi vé', 'hủy vé', 'hoàn tiền', 'refund', 'trả vé', 'chuyển nhượng', 'đổi trả'],
+        title: '🔄 Chính sách Đổi / Hủy vé',
+        answer: `Chính sách đổi trả vé tại BDHT được quy định như sau:\n\n` +
+            `1. **Hủy vé & Hoàn tiền**: Tùy thuộc vào quy định riêng của từng Ban tổ chức sự kiện. Thông thường, yêu cầu hoàn tiền cần gửi trước sự kiện ít nhất **72 giờ**.\n` +
+            `2. **Phí hoàn vé**: Phí hoàn trả dao động từ 10% - 20% giá trị vé tùy thời điểm.\n` +
+            `3. **Đổi suất diễn/loại vé**: Có thể thực hiện nếu sự kiện còn vé trống và được BTC cho phép.\n` +
+            `4. **Chuyển nhượng vé**: Bạn có thể gửi tặng vé QR cho người khác sử dụng một cách hợp lệ.\n\n` +
+            `Để gửi yêu cầu, vui lòng vào trang **Lịch sử mua vé** hoặc liên hệ CSKH qua hotline **1900 xxxx** để được hỗ trợ trực tiếp.`,
+        chips: ['📞 Liên hệ hỗ trợ', '💳 Quy trình mua vé', '🎫 Sự kiện ca nhạc']
+    },
+    {
+        keywords: ['quên mật khẩu', 'reset password', 'đổi mật khẩu', 'không đăng nhập được', 'lấy lại mật khẩu'],
+        title: '🔑 Quên / Đổi mật khẩu',
+        answer: `Nếu bạn quên mật khẩu hoặc không thể đăng nhập, hãy làm theo các bước sau:\n\n` +
+            `1. Nhấp vào liên kết **"Quên mật khẩu?"** tại trang Đăng nhập.\n` +
+            `2. Nhập địa chỉ **Email** tài khoản của bạn.\n` +
+            `3. Hệ thống sẽ gửi một liên kết đặt lại mật khẩu về Email đó.\n` +
+            `4. Mở Email, click vào link và tạo mật khẩu mới.\n\n` +
+            `*Lưu ý*: Hãy kiểm tra thêm thư mục **Spam/Thư rác** nếu không nhận được email sau 2-3 phút.`,
+        chips: ['🔑 Đi đến Đăng nhập', '📞 Liên hệ hỗ trợ']
+    },
+    {
+        keywords: ['giới thiệu', 'bdht là gì', 'website gì', 'về chúng tôi', 'liên hệ', 'hotline', 'email', 'support'],
+        title: '📞 Về BDHT & Liên hệ hỗ trợ',
+        answer: `**BDHT Ticket** là nền tảng đặt vé sự kiện, ca nhạc, workshop, thể thao hàng đầu Việt Nam.\n\n` +
+            `**Thông tin liên hệ CSKH:**\n` +
+            `- 📞 **Hotline**: 1900 6789 (8h00 - 22h00 hàng ngày)\n` +
+            `- ✉️ **Email**: support@bdhtticket.vn\n` +
+            `- 🏢 **Địa chỉ**: Tòa nhà BDHT, Cầu Giấy, Hà Nội\n\n` +
+            `Chúng tôi luôn sẵn sàng hỗ trợ bạn đặt vé, xử lý sự cố thanh toán hoặc giải đáp thông tin sự kiện!`,
+        chips: ['🎫 Xem sự kiện', '💳 Quy trình thanh toán', '🔄 Đổi/Hủy vé']
+    },
+    {
+        keywords: ['hướng dẫn sử dụng', 'cách dùng', 'chức năng', 'web có gì', 'làm thế nào', 'giúp đỡ', 'bắt đầu'],
+        title: '🚀 Hướng dẫn sử dụng Website',
+        answer: `Chào mừng bạn đến với BDHT Ticket! Đây là các tính năng chính bạn có thể sử dụng trên website của chúng tôi:\n\n` +
+            `1. **Tìm kiếm & Lọc sự kiện**: Tìm theo tên sự kiện, lọc theo **Địa điểm** (Hà Nội, TP.HCM...) hoặc **Thể loại** (Concert, Workshop, Vé xem phim...).\n` +
+            `2. **Đặt vé nhanh chóng**: Chọn vé, chọn số lượng, điền thông tin và thanh toán online nhận vé QR tức thì.\n` +
+            `3. **Quản lý tài khoản**: Xem lại vé đã mua, chỉnh sửa thông tin cá nhân và quản lý lịch sử đơn hàng tại **Trang cá nhân**.\n` +
+            `4. **Tin tức**: Cập nhật tin tức hot nhất về âm nhạc, nghệ thuật và đời sống.\n\n` +
+            `Bạn muốn tôi hỗ trợ tìm sự kiện hay giải đáp thêm thông tin nào?`,
+        chips: ['🎫 Xem sự kiện', '💳 Cách mua vé', '👤 Đăng ký tài khoản']
     }
-    return window.chatWidgetState;
-}
+];
 
-function readGuestChatStore() {
+function readLocalChatHistory() {
     try {
-        const raw = localStorage.getItem(GUEST_CHAT_STORAGE_KEY);
-        if (!raw) return { sessions: [] };
-
-        const parsed = JSON.parse(raw);
-        if (!parsed || typeof parsed !== 'object') return { sessions: [] };
-        if (!Array.isArray(parsed.sessions)) parsed.sessions = [];
-        return parsed;
-    } catch (error) {
-        console.warn('Không thể đọc lịch sử chat khách:', error);
-        return { sessions: [] };
+        const raw = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
+        if (!raw) return [];
+        return JSON.parse(raw) || [];
+    } catch (e) {
+        return [];
     }
 }
 
-function writeGuestChatStore(store) {
-    localStorage.setItem(GUEST_CHAT_STORAGE_KEY, JSON.stringify(store));
-}
-
-function upsertGuestSession(sessionCode, text, sender) {
-    if (!sessionCode || !text) return;
-
-    const store = readGuestChatStore();
-    const now = new Date().toISOString();
-    const existingIndex = store.sessions.findIndex((item) => item.sessionCode === sessionCode);
-
-    const entry = existingIndex >= 0 ? store.sessions[existingIndex] : {
-        sessionCode,
-        createdAt: now,
-        updatedAt: now,
-        preview: '',
-        messages: []
-    };
-
-    entry.updatedAt = now;
-    entry.preview = text.slice(0, 80);
-    entry.messages.push({
-        sender,
-        text,
-        createdAt: now
-    });
-
-    if (existingIndex >= 0) {
-        store.sessions[existingIndex] = entry;
-    } else {
-        store.sessions.unshift(entry);
+function saveLocalChatHistory(history) {
+    try {
+        localStorage.setItem(CHAT_HISTORY_STORAGE_KEY, JSON.stringify(history.slice(-30))); // Keep last 30 messages
+    } catch (e) {
+        console.warn('Không thể lưu lịch sử chat:', e);
     }
-
-    store.sessions = store.sessions.slice(0, 8);
-    writeGuestChatStore(store);
 }
 
-function getGuestSessionMessages(sessionCode) {
-    if (!sessionCode) return [];
-
-    const store = readGuestChatStore();
-    const session = store.sessions.find((item) => item.sessionCode === sessionCode);
-    return session?.messages || [];
+function clearLocalChatHistory() {
+    localStorage.removeItem(CHAT_HISTORY_STORAGE_KEY);
 }
 
 function escapeHtml(value) {
@@ -90,20 +110,12 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
-function normalizeEventResponse(response) {
-    if (Array.isArray(response)) return response;
-    if (response && Array.isArray(response.content)) return response.content;
-    return [];
-}
-
 function getEventDetailUrl(event) {
     const eventId = event?.eventId ?? event?.id ?? '';
     if (!eventId) return '#';
-
     if (window.pageUtils && typeof window.pageUtils.resolveUrl === 'function') {
         return window.pageUtils.resolveUrl(`pages/user/nat-event-detail.html?id=${encodeURIComponent(eventId)}`);
     }
-
     return `pages/user/nat-event-detail.html?id=${encodeURIComponent(eventId)}`;
 }
 
@@ -112,99 +124,76 @@ function getEventImage(event) {
 }
 
 function formatEventTime(event) {
-    const start = event?.startTime || event?.start_date || event?.startDate;
-    const end = event?.endTime || event?.end_date || event?.endDate;
-
+    const start = event?.startTime || event?.startDate;
     if (!start) return 'Thời gian chưa cập nhật';
-    const formatted = new Date(start).toLocaleString('vi-VN', {
+    return new Date(start).toLocaleString('vi-VN', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
     });
-
-    if (end) {
-        const endFormatted = new Date(end).toLocaleString('vi-VN', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        return `${formatted} - ${endFormatted}`;
-    }
-
-    return formatted;
 }
 
 function buildEventCardHtml(event) {
     const title = escapeHtml(event?.title || 'Sự kiện');
     const category = escapeHtml(event?.categoryName || '');
-    const venue = escapeHtml(event?.venue?.venueName || event?.venueName || '');
+    const venue = escapeHtml(event?.venue?.venueName || event?.venueName || 'Địa điểm trực tuyến');
     const time = escapeHtml(formatEventTime(event));
     const image = escapeHtml(getEventImage(event));
     const price = event?.price != null ? `${Number(event.price).toLocaleString('vi-VN')} VNĐ` : 'Liên hệ để biết giá';
     const detailUrl = getEventDetailUrl(event);
 
     return `
-        <div class="rounded-[22px] border border-gray-100 bg-white shadow-sm overflow-hidden">
-            <img src="${image}" alt="${title}" class="w-full h-36 object-cover" />
-            <div class="p-4 space-y-3">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <p class="text-sm font-extrabold text-slate-900 line-clamp-2">${title}</p>
-                        ${category ? `<p class="text-[11px] text-brand-orange font-bold uppercase mt-1">${category}</p>` : ''}
-                    </div>
-                    <span class="text-[11px] font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-full whitespace-nowrap">${escapeHtml(price)}</span>
+        <div class="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:border-orange-100">
+            <div class="relative h-32 overflow-hidden">
+                <img src="${image}" alt="${title}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                <span class="absolute top-2 right-2 text-[10px] font-black text-white bg-gradient-to-r from-orange-500 to-rose-500 px-2.5 py-1 rounded-full shadow-sm">${escapeHtml(price)}</span>
+            </div>
+            <div class="p-3.5 space-y-2">
+                <div>
+                    ${category ? `<span class="text-[9px] text-orange-500 font-extrabold uppercase bg-orange-50 px-2 py-0.5 rounded-full inline-block mb-1">${category}</span>` : ''}
+                    <p class="text-xs font-bold text-slate-800 line-clamp-2 leading-snug">${title}</p>
                 </div>
-                ${venue ? `<p class="text-xs text-gray-500">📍 ${venue}</p>` : ''}
-                <p class="text-xs text-gray-500">🕒 ${time}</p>
-                <div class="flex gap-2">
-                    <a href="${detailUrl}" class="inline-flex items-center justify-center px-3 py-2 rounded-full bg-orange-500 text-white text-[11px] font-bold hover:bg-orange-600 transition-colors">Xem chi tiết</a>
-                    <a href="${window.pageUtils && typeof window.pageUtils.resolveUrl === 'function' ? window.pageUtils.resolveUrl('pages/user/nat-all-events.html') : 'pages/user/nat-all-events.html'}" class="inline-flex items-center justify-center px-3 py-2 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold hover:bg-slate-200 transition-colors">Tất cả sự kiện</a>
+                <div class="space-y-1 text-[11px] text-slate-500 font-medium">
+                    <p class="truncate"><i class="fas fa-map-marker-alt text-orange-400 mr-1"></i> ${venue}</p>
+                    <p class="truncate"><i class="fas fa-calendar-alt text-orange-400 mr-1"></i> ${time}</p>
+                </div>
+                <div class="pt-1.5 flex gap-1.5">
+                    <a href="${detailUrl}" class="flex-1 inline-flex items-center justify-center py-1.5 rounded-full bg-slate-900 text-white text-[10px] font-bold hover:bg-orange-500 transition-colors shadow-sm">Mua vé ngay</a>
                 </div>
             </div>
         </div>
     `;
 }
 
-function buildQuickActionCard(title, description, actions) {
-    const actionButtons = actions.map((action) => `
-        <a href="${action.href}" class="inline-flex items-center justify-center px-3 py-2 rounded-full bg-slate-900 text-white text-[11px] font-bold hover:bg-brand-purple transition-colors">${escapeHtml(action.label)}</a>
-    `).join('');
-
-    return `
-        <div class="rounded-[24px] border border-gray-100 bg-white shadow-sm p-4 space-y-3">
-            <div>
-                <p class="text-sm font-extrabold text-slate-900">${escapeHtml(title)}</p>
-                <p class="text-xs text-gray-500 mt-1 leading-relaxed">${escapeHtml(description)}</p>
-            </div>
-            <div class="flex flex-wrap gap-2">${actionButtons}</div>
-        </div>
-    `;
-}
-
-function appendMessage(sender, text) {
+function appendMessage(sender, text, skipSave = false) {
     if (!currentChatBox) return;
 
     const msgDiv = document.createElement('div');
-    msgDiv.className = 'flex gap-3 items-start';
+    msgDiv.className = 'flex gap-3 items-start animate-fade-in';
 
     if (sender === 'user') {
         msgDiv.className += ' justify-end';
         const bubble = document.createElement('div');
-        bubble.className = 'bg-orange-500 text-white px-4 py-3 rounded-[22px] rounded-tr-sm shadow-sm max-w-[85%] leading-relaxed text-sm font-semibold';
+        bubble.className = 'bg-gradient-to-r from-orange-500 to-rose-500 text-white px-4 py-3 rounded-[22px] rounded-tr-sm shadow-sm max-w-[85%] leading-relaxed text-sm font-semibold';
         bubble.textContent = text;
         msgDiv.appendChild(bubble);
     } else {
         const avatar = document.createElement('div');
         avatar.className = 'w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-rose-400 text-white flex items-center justify-center shrink-0 shadow-sm';
-        avatar.innerHTML = '<i class="fas fa-crow text-xs"></i>';
+        avatar.innerHTML = '<i class="fas fa-robot text-xs"></i>';
 
         const bubble = document.createElement('div');
         bubble.className = 'bg-white border border-gray-100 px-4 py-3 rounded-[22px] rounded-tl-sm shadow-sm max-w-[85%] leading-relaxed text-sm text-gray-700';
-        bubble.innerHTML = text.replace(/\n/g, '<br />');
+
+        // Render simple markdown like **bold**, \n to breaks
+        let formattedText = text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n/g, '<br />');
+
+        bubble.innerHTML = formattedText;
 
         msgDiv.appendChild(avatar);
         msgDiv.appendChild(bubble);
@@ -212,35 +201,50 @@ function appendMessage(sender, text) {
 
     currentChatBox.appendChild(msgDiv);
     currentChatBox.scrollTop = currentChatBox.scrollHeight;
+
+    if (!skipSave) {
+        const history = readLocalChatHistory();
+        history.push({ sender, text });
+        saveLocalChatHistory(history);
+    }
 }
 
-function appendAssistantCard(html) {
+function appendAssistantCard(html, skipSave = false) {
     if (!currentChatBox) return;
 
     const wrapper = document.createElement('div');
-    wrapper.className = 'flex gap-3 items-start';
+    wrapper.className = 'flex gap-3 items-start animate-fade-in';
     wrapper.innerHTML = `
         <div class="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-rose-400 text-white flex items-center justify-center shrink-0 shadow-sm">
-            <i class="fas fa-crow text-xs"></i>
+            <i class="fas fa-robot text-xs"></i>
         </div>
-        <div class="max-w-[85%]">${html}</div>
+        <div class="max-w-[85%] flex-1">${html}</div>
     `;
     currentChatBox.appendChild(wrapper);
     currentChatBox.scrollTop = currentChatBox.scrollHeight;
+
+    if (!skipSave) {
+        const history = readLocalChatHistory();
+        history.push({ sender: 'ai_html', html });
+        saveLocalChatHistory(history);
+    }
 }
 
 function showLoadingIndicator() {
     if (!currentChatBox) return;
+    removeLoadingIndicator();
 
     const loader = document.createElement('div');
-    loader.className = 'flex gap-3 items-start animate-pulse';
+    loader.className = 'flex gap-3 items-start';
     loader.id = 'ai-chat-loading-indicator';
     loader.innerHTML = `
-        <div class="w-8 h-8 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center shrink-0 font-bold">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-rose-400 text-white flex items-center justify-center shrink-0 shadow-sm animate-pulse">
             <i class="fas fa-robot text-xs"></i>
         </div>
-        <div class="bg-white border border-gray-100 px-4 py-3 rounded-[22px] rounded-tl-sm shadow-sm max-w-[80%] text-sm text-slate-400">
-            AI đang suy nghĩ...
+        <div class="bg-white border border-gray-100 px-4 py-3 rounded-[22px] rounded-tl-sm shadow-sm max-w-[80%] text-sm text-slate-400 flex items-center gap-1.5">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
         </div>
     `;
     currentChatBox.appendChild(loader);
@@ -252,110 +256,163 @@ function removeLoadingIndicator() {
     if (loader) loader.remove();
 }
 
-function detectIntent(message) {
-    const msg = message.toLowerCase();
-
-    if (/(xem\s+sản\s+phẩm|xem\s+vé|sản\s+phẩm|liveshow|sự\s+kiện|khuyến\s+mãi|event)/i.test(msg)) {
-        return 'products';
-    }
-
-    if (/(đăng\s+nhập|login|đăng nhâp)/i.test(msg) && !/(đăng\s+ký|register)/i.test(msg)) {
-        return 'login';
-    }
-
-    if (/(đăng\s+ký|register)/i.test(msg) && !/(đăng\s+nhập|login)/i.test(msg)) {
-        return 'register';
-    }
-
-    if (/(đăng\s+nhập|login).*(đăng\s+ký|register)| (đăng\s+ký|register).*(đăng\s+nhập|login)/i.test(msg)) {
-        return 'auth';
-    }
-
-    return 'ai';
-}
-
-function buildAuthCard() {
-    const loginUrl = window.pageUtils && typeof window.pageUtils.resolveUrl === 'function'
-        ? window.pageUtils.resolveUrl('pages/user/nat-login.html')
-        : 'pages/user/nat-login.html';
-    const registerUrl = window.pageUtils && typeof window.pageUtils.resolveUrl === 'function'
-        ? window.pageUtils.resolveUrl('pages/user/nat-register.html')
-        : 'pages/user/nat-register.html';
-
-    return buildQuickActionCard('Đăng nhập / Đăng ký', 'Tôi có thể đưa bạn đến trang đăng nhập hoặc đăng ký nhanh chóng.', [
-        { label: 'Đăng nhập', href: loginUrl },
-        { label: 'Đăng ký', href: registerUrl }
-    ]);
-}
-
-function buildDefaultPromptCard() {
-    return buildQuickActionCard('Bạn có thể hỏi tôi về', 'Tìm sự kiện, xem vé, đăng nhập hoặc đăng ký một cách nhanh chóng.', [
-        { label: 'Xem sự kiện', href: window.pageUtils && typeof window.pageUtils.resolveUrl === 'function' ? window.pageUtils.resolveUrl('pages/user/nat-all-events.html') : 'pages/user/nat-all-events.html' },
-        { label: 'Đăng nhập', href: window.pageUtils && typeof window.pageUtils.resolveUrl === 'function' ? window.pageUtils.resolveUrl('pages/user/nat-login.html') : 'pages/user/nat-login.html' },
-        { label: 'Đăng ký', href: window.pageUtils && typeof window.pageUtils.resolveUrl === 'function' ? window.pageUtils.resolveUrl('pages/user/nat-register.html') : 'pages/user/nat-register.html' }
-    ]);
-}
-
-async function renderProductCards(message) {
+// Function to fetch active published events from the API client
+async function fetchLiveEvents() {
     try {
-        const apiClient = requireApiClient();
-        const response = await apiClient.getPublicEvents({ page: 0, size: 100 });
-        const events = normalizeEventResponse(response).slice(0, 6);
+        if (window.apiClient) {
+            const res = await window.apiClient.getPublicEvents({ page: 0, size: 50 });
+            if (Array.isArray(res)) return res.filter(e => e.status === 'PUBLISHED');
+            if (res && Array.isArray(res.content)) return res.content.filter(e => e.status === 'PUBLISHED');
+        }
+    } catch (e) {
+        console.error('Lỗi khi fetch sự kiện cho AI Chat:', e);
+    }
+    return [];
+}
 
-        const keyword = message.toLowerCase();
-        const filtered = events.filter((event) => {
-            const haystack = `${event?.title || ''} ${event?.categoryName || ''} ${event?.venue?.venueName || event?.venueName || ''}`.toLowerCase();
-            if (haystack.includes('sản phẩm') || haystack.includes('event')) return true;
-            if (keyword.includes('xem sản phẩm')) return true;
-            const searchTerm = keyword.replace(/xem sản phẩm/g, '').replace(/xem sự kiện/g, '').replace(/xem/g, '').trim();
-            return searchTerm ? haystack.includes(searchTerm) : true;
+// Render dynamic suggestion chips after messages
+function setQuickReplyChips(chips) {
+    if (!currentQuickRepliesContainer || !currentQuickRepliesInner) return;
+
+    if (!chips || chips.length === 0) {
+        currentQuickRepliesContainer.style.display = 'none';
+        return;
+    }
+
+    currentQuickRepliesInner.innerHTML = '';
+    chips.forEach(chipText => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chat-chip';
+        btn.innerHTML = escapeHtml(chipText);
+        btn.addEventListener('click', () => {
+            if (currentChatInput) {
+                currentChatInput.value = chipText.replace(/^[^\s\w]*/, '').trim(); // strip emojis if any
+                sendChatMessage();
+            }
         });
+        currentQuickRepliesInner.appendChild(btn);
+    });
 
-        const source = filtered.length ? filtered : events;
-        const preview = source.slice(0, 3);
+    currentQuickRepliesContainer.style.display = 'block';
+}
 
-        if (!preview.length) {
-            appendAssistantCard(buildQuickActionCard('Không tìm thấy sản phẩm', 'Tôi chưa tìm được sự kiện phù hợp ngay lúc này. Hãy thử câu hỏi cụ thể hơn như “xem concert”, “xem show” hoặc “xem sự kiện gần đây”.', []));
-            return;
+// Smart local processing before sending to the backend AI to provide instantaneous answers
+async function processSmartIntent(message) {
+    const msg = message.toLowerCase().trim();
+
+    // 1. GREETING INTENT
+    if (/^(hello|hi|xin chào|chào bạn|chào robot|lô|chào)/i.test(msg)) {
+        return {
+            text: `Xin chào! Tôi là **BDHT Assistant** 🤖. Tôi có thể hỗ trợ bạn tìm kiếm sự kiện, hướng dẫn đặt vé, thanh toán, hoặc trả lời các câu hỏi về website.\n\nBạn muốn tôi trợ giúp gì hôm nay?`,
+            chips: ['🎫 Xem sự kiện nổi bật', '💳 Cách mua vé', '📞 Liên hệ hỗ trợ']
+        };
+    }
+
+    // 2. THANKS INTENT
+    if (/^(cảm ơn|cám ơn|thank|tks|ok cảm ơn|ok cám ơn)/i.test(msg)) {
+        return {
+            text: `Rất vui được hỗ trợ bạn! Chúc bạn có những trải nghiệm tuyệt vời cùng BDHT Ticket. Nếu có câu hỏi nào khác, cứ tự nhiên hỏi tôi nhé! 😊`,
+            chips: ['🎫 Xem sự kiện khác', '💳 Hướng dẫn mua vé']
+        };
+    }
+
+    // 3. SPECIAL DYNAMIC EVENTS RETRIEVAL
+    if (/(sự kiện|liveshow|concert|show diễn|vé ca nhạc|xem sự kiện|vé xem phim|workshop|thể thao|hoạt động|chương trình)/i.test(msg) ||
+        /(nổi bật|hot nhất|có gì hot|ở hà nội|ở hcm|ở sài gòn|gần đây|tìm vé|mua vé)/i.test(msg)) {
+
+        showLoadingIndicator();
+        const events = await fetchLiveEvents();
+        removeLoadingIndicator();
+
+        if (events.length === 0) {
+            return {
+                text: `Hiện tại hệ thống chưa cập nhật sự kiện mới hoặc tôi không thể tải được danh sách sự kiện. Bạn vui lòng truy cập trang **[Tất cả sự kiện](${window.pageUtils?.resolveUrl('pages/user/nat-all-events.html') || 'nat-all-events.html'})** để cập nhật thông tin mới nhất nhé!`,
+                chips: ['💳 Cách thanh toán', '📞 Liên hệ hỗ trợ']
+            };
         }
 
-        appendAssistantCard(`
+        // Filter events by keywords if specified
+        let filtered = events;
+        let filterMsg = "nổi bật nhất hiện tại";
+
+        if (msg.includes('hà nội')) {
+            filtered = events.filter(e => {
+                const venueStr = `${e.venue?.venueName} ${e.venue?.address} ${e.venue?.city}`.toLowerCase();
+                return venueStr.includes('hà nội') || venueStr.includes('ha noi');
+            });
+            filterMsg = "tại Hà Nội";
+        } else if (msg.includes('hcm') || msg.includes('sài gòn') || msg.includes('hồ chí minh')) {
+            filtered = events.filter(e => {
+                const venueStr = `${e.venue?.venueName} ${e.venue?.address} ${e.venue?.city}`.toLowerCase();
+                return venueStr.includes('hồ chí minh') || venueStr.includes('hcm') || venueStr.includes('sài gòn') || venueStr.includes('sai gon');
+            });
+            filterMsg = "tại TP. Hồ Chí Minh";
+        } else if (msg.includes('ca nhạc') || msg.includes('concert') || msg.includes('liveshow') || msg.includes('show')) {
+            filtered = events.filter(e => {
+                const catStr = `${e.categoryName} ${e.title}`.toLowerCase();
+                return catStr.includes('ca nhạc') || catStr.includes('concert') || catStr.includes('liveshow') || catStr.includes('show') || catStr.includes('music');
+            });
+            filterMsg = "thể loại Ca nhạc & Liveshow";
+        } else if (msg.includes('workshop') || msg.includes('hội thảo') || msg.includes('học tập')) {
+            filtered = events.filter(e => {
+                const catStr = `${e.categoryName} ${e.title}`.toLowerCase();
+                return catStr.includes('workshop') || catStr.includes('hội thảo') || catStr.includes('seminar') || catStr.includes('lớp học');
+            });
+            filterMsg = "thể loại Workshop & Hội thảo";
+        }
+
+        // Fallback to top events if filtering returned empty
+        if (filtered.length === 0) {
+            filtered = events;
+            filterMsg = "nổi bật nhất đang diễn ra";
+        }
+
+        // Limit results to top 3 cards
+        const topEvents = filtered.slice(0, 3);
+        const cardHtml = `
             <div class="space-y-3">
-                <p class="text-sm font-extrabold text-slate-900">Dưới đây là các sản phẩm/sự kiện phù hợp nhất:</p>
-                <div class="grid gap-3">${preview.map((event) => buildEventCardHtml(event)).join('')}</div>
+                <p class="text-sm font-extrabold text-slate-800">Dưới đây là các sự kiện ${filterMsg}:</p>
+                <div class="grid gap-3.5 sm:grid-cols-1">${topEvents.map(e => buildEventCardHtml(e)).join('')}</div>
+                <p class="text-[11px] text-slate-500 font-medium">Bạn có thể nhấp vào **"Mua vé ngay"** của từng sự kiện để xem sơ đồ ghế và đặt mua trực tiếp.</p>
             </div>
-        `);
+        `;
 
-        if (!localStorage.getItem('token')) {
-            upsertGuestSession(currentChatState.sessionCode, message, 'user');
-            upsertGuestSession(currentChatState.sessionCode, 'Hiển thị sản phẩm/sự kiện phù hợp.', 'ai');
+        return {
+            html: cardHtml,
+            chips: ['💳 Cách mua vé', '🔄 Đổi/Hủy vé', '📞 Liên hệ hỗ trợ']
+        };
+    }
+
+    // 4. CHECK USER/LOGIN/REGISTER FLOWS
+    if (/(đăng nhập|login|tài khoản|sign in)/i.test(msg) && !/(đăng ký|register|tạo tài khoản)/i.test(msg)) {
+        const loginUrl = window.pageUtils?.resolveUrl('pages/user/nat-login.html') || 'nat-login.html';
+        return {
+            text: `Bạn có thể đăng nhập vào hệ thống BDHT bằng cách click vào **[Trang Đăng Nhập](${loginUrl})**.\n\nSau khi đăng nhập thành công, bạn sẽ dễ dàng quản lý thông tin cá nhân, tra cứu vé đã mua và thanh toán nhanh chóng hơn.`,
+            chips: ['👤 Đăng ký tài khoản', '🔑 Quên mật khẩu']
+        };
+    }
+
+    if (/(đăng ký|register|tạo tài khoản|sign up)/i.test(msg)) {
+        const registerUrl = window.pageUtils?.resolveUrl('pages/user/nat-register.html') || 'nat-register.html';
+        return {
+            text: `Để đăng ký tài khoản mới, vui lòng truy cập **[Trang Đăng Ký](${registerUrl})**.\n\nĐiền đầy đủ thông tin: Họ tên, Email, Số điện thoại và Mật khẩu để bắt đầu sở hữu tài khoản BDHT với nhiều ưu đãi hấp dẫn!`,
+            chips: ['🔑 Đi đến Đăng nhập', '📞 Liên hệ hỗ trợ']
+        };
+    }
+
+    // 5. MATCH FAQ KNOWLEDGE BASE
+    for (const faq of FAQ_KNOWLEDGE_BASE) {
+        if (faq.keywords.some(keyword => msg.includes(keyword))) {
+            return {
+                text: `### ${faq.title}\n\n${faq.answer}`,
+                chips: faq.chips
+            };
         }
-    } catch (error) {
-        console.error('Không thể tải sản phẩm:', error);
-        appendAssistantCard(buildQuickActionCard('Không thể tải sản phẩm', 'Tôi gặp lỗi khi lấy dữ liệu sự kiện. Vui lòng thử lại sau.', []));
     }
-}
 
-function requireApiClient() {
-    if (!window.apiClient) {
-        throw new Error('Hệ thống chat chưa sẵn sàng. Vui lòng tải lại trang.');
-    }
-    return window.apiClient;
-}
-
-async function generateChatSession() {
-    try {
-        const apiClient = requireApiClient();
-        const response = await apiClient.get('/api/vtd/public/ai-chat/generate-session');
-        currentChatState.sessionCode = response.sessionCode || '';
-
-        if (!currentChatState.sessionCode) {
-            throw new Error('Không nhận được sessionCode hợp lệ từ máy chủ.');
-        }
-    } catch (error) {
-        console.error('Không thể lấy session code từ server:', error);
-        throw error;
-    }
+    // No local intent detected, fallback to standard LLM integration
+    return null;
 }
 
 async function sendChatMessage() {
@@ -364,55 +421,60 @@ async function sendChatMessage() {
     const message = currentChatInput.value.trim();
     if (!message) return;
 
+    // Display user message instantly
     appendMessage('user', message);
     currentChatInput.value = '';
 
-    const intent = detectIntent(message);
-
-    if (!currentChatState.sessionCode) {
-        try {
-            await generateChatSession();
-        } catch (error) {
-            appendMessage('ai', 'Không thể kết nối đến hệ thống chat ngay lúc này. Vui lòng thử lại sau.');
-            return;
-        }
-    }
-
-    if (intent === 'products') {
-        await renderProductCards(message);
-        return;
-    }
-
-    if (intent === 'login' || intent === 'register' || intent === 'auth') {
-        appendAssistantCard(buildAuthCard());
-        if (!localStorage.getItem('token')) {
-            upsertGuestSession(currentChatState.sessionCode, message, 'user');
-            upsertGuestSession(currentChatState.sessionCode, 'Cung cấp link đăng nhập và đăng ký.', 'ai');
-        }
-        return;
-    }
-
+    // Trigger typing indicator
     showLoadingIndicator();
 
     try {
-        const apiClient = requireApiClient();
-        const response = await apiClient.post('/api/vtd/public/ai-chat/message', {
-            sessionCode: currentChatState.sessionCode,
-            message
-        });
+        // Try locally first
+        const localResponse = await processSmartIntent(message);
+        if (localResponse) {
+            removeLoadingIndicator();
+            if (localResponse.html) {
+                appendAssistantCard(localResponse.html);
+            } else {
+                appendMessage('ai', localResponse.text);
+            }
+            setQuickReplyChips(localResponse.chips);
+            return;
+        }
 
-        const aiText = response.aiResponse?.messageText || response.aiResponse?.message || response.aiResponse?.content || response.aiResponse?.response || 'AI chưa trả lời.';
-        removeLoadingIndicator();
-        appendMessage('ai', aiText);
+        // Call backend API if no quick response matched
+        if (!chatSessionCode) {
+            chatSessionCode = crypto.randomUUID();
+        }
 
-        if (!localStorage.getItem('token')) {
-            upsertGuestSession(currentChatState.sessionCode, message, 'user');
-            upsertGuestSession(currentChatState.sessionCode, aiText, 'ai');
+        if (window.apiClient) {
+            const response = await window.apiClient.post('/api/vtd/public/ai-chat/message', {
+                sessionCode: chatSessionCode,
+                message: message
+            });
+
+            removeLoadingIndicator();
+
+            const aiText = response?.aiResponse?.messageText ||
+                response?.aiResponse?.message ||
+                response?.aiResponse?.content ||
+                response?.aiResponse?.response ||
+                "Tôi xin lỗi, hiện tại tôi đang gặp khó khăn khi kết nối với máy chủ. Bạn có cần tôi hỗ trợ các chức năng mua vé hay giải đáp FAQ không?";
+
+            appendMessage('ai', aiText);
+            setQuickReplyChips(['🎫 Xem sự kiện', '💳 Quy trình thanh toán', '🔄 Đổi/Hủy vé', '📞 Liên hệ hỗ trợ']);
+        } else {
+            throw new Error('API Client not initialized');
         }
     } catch (error) {
-        console.error('Lỗi gửi tin nhắn AI:', error);
+        console.error('Lỗi gửi tin nhắn:', error);
         removeLoadingIndicator();
-        appendMessage('ai', 'Không thể gửi tin nhắn ngay lúc này. Vui lòng thử lại sau.');
+        appendMessage('ai', `Hệ thống hỗ trợ AI đang bận. Đừng lo lắng, bạn vẫn có thể thực hiện mọi thao tác mua bán vé dễ dàng:\n\n` +
+            `- Để **mua vé**: Nhấp chọn bất kỳ sự kiện nào bên ngoài màn hình, xem chi tiết và nhấp **"Mua vé ngay"**.\n` +
+            `- Để **thanh toán**: Sau khi điền thông tin người nhận, click **"Thanh toán"** để chuyển sang cổng VNPay hoặc ví điện tử.\n` +
+            `- Để **đăng nhập / đăng ký**: Click vào nút tương ứng trên thanh điều hướng đầu trang.\n\n` +
+            `Tôi hỗ trợ thêm gì cho bạn nữa không?`);
+        setQuickReplyChips(['🎫 Xem sự kiện', '💳 Quy trình thanh toán', '📞 Liên hệ hỗ trợ']);
     }
 }
 
@@ -445,21 +507,32 @@ async function initAiChat() {
 
     const fabChatIcon = document.getElementById('fab-chat-icon');
     const fabCloseIcon = document.getElementById('fab-close-icon');
+    const fabBadge = document.getElementById('fab-notification-badge');
     const chatCloseBtn = document.getElementById('chat-close-btn');
+    const chatClearBtn = document.getElementById('chat-clear-btn');
     const chatInput = document.getElementById('chat-input-field');
     const chatSendBtn = document.getElementById('chat-send-btn');
     const chatBox = document.getElementById('chat-messages-box');
 
+    currentChatBox = chatBox;
+    currentChatInput = chatInput;
+    currentQuickRepliesContainer = document.getElementById('chat-quick-replies');
+    currentQuickRepliesInner = document.getElementById('chat-quick-replies-inner');
+
     if (!chatInput || !chatSendBtn || !chatBox) return;
 
-    currentChatBox = chatBox;
-    currentChatState = ensureChatWidgetState();
-    currentChatInput = chatInput;
+    // Show initial dynamic notification badge to draw attention
+    setTimeout(() => {
+        if (popup.classList.contains('hidden') && fabBadge) {
+            fabBadge.classList.remove('hidden');
+        }
+    }, 4000);
 
     const openPopup = () => {
         popup.classList.remove('hidden');
         fabChatIcon?.classList.add('hidden');
         fabCloseIcon?.classList.remove('hidden');
+        if (fabBadge) fabBadge.classList.add('hidden');
         requestAnimationFrame(() => chatInput.focus());
     };
 
@@ -480,6 +553,15 @@ async function initAiChat() {
 
     chatCloseBtn?.addEventListener('click', closePopup);
 
+    chatClearBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (confirm('Bạn có muốn xóa toàn bộ lịch sử trò chuyện này không?')) {
+            clearLocalChatHistory();
+            chatBox.innerHTML = '';
+            showWelcomeMessage();
+        }
+    });
+
     window.addEventListener('click', (event) => {
         if (!popup.classList.contains('hidden') && !popup.contains(event.target) && !fab.contains(event.target)) {
             closePopup();
@@ -499,23 +581,22 @@ async function initAiChat() {
 
     chatSendBtn.addEventListener('click', sendChatMessage);
 
-    if (!currentChatState.sessionCode) {
-        try {
-            await generateChatSession();
-        } catch (error) {
-            console.warn('Chưa tạo được session cho chat widget:', error);
-        }
-    }
-
-    if (!localStorage.getItem('token')) {
-        const storedMessages = getGuestSessionMessages(currentChatState.sessionCode);
-        if (storedMessages.length) {
-            currentChatBox.innerHTML = '';
-            storedMessages.forEach((message) => {
-                appendMessage(message.sender, message.text);
+    // Initial message display logic
+    const showWelcomeMessage = () => {
+        const stored = readLocalChatHistory();
+        if (stored.length > 0) {
+            stored.forEach(msg => {
+                if (msg.sender === 'ai_html') {
+                    appendAssistantCard(msg.html, true);
+                } else {
+                    appendMessage(msg.sender, msg.text, true);
+                }
             });
+        } else {
+            appendMessage('ai', `Xin chào! Tôi là trợ lý ảo thông minh **BDHT Assistant** 🤖.\n\nTôi có thể giúp gì cho bạn hôm nay?\n- 🎫 Tìm sự kiện nổi bật, liveshow ca nhạc, workshop học tập.\n- 💳 Hướng dẫn quy trình đặt vé và thanh toán trực tuyến.\n- 🔄 Giải đáp chính sách đổi/hủy vé, hoàn tiền.\n- 🔑 Trợ giúp về tài khoản và các vấn đề kỹ thuật.`, true);
         }
-    }
+        setQuickReplyChips(['🎫 Sự kiện nổi bật', '💳 Hướng dẫn mua vé', '🔄 Chính sách đổi/hủy vé', '📞 Liên hệ hỗ trợ']);
+    };
 
-    appendAssistantCard(buildDefaultPromptCard());
+    showWelcomeMessage();
 }
